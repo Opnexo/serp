@@ -1,0 +1,21 @@
+# CODEOWNERS for SimpleERP
+
+# Default owners for everything
+* @simpleerp/core-team
+
+# Core packages
+/packages/serp-core/ @simpleerp/core-team @simpleerp/core-maintainers
+/packages/serp-shell/ @simpleerp/core-team
+/packages/serp-cli/ @simpleerp/core-team
+
+# Official modules
+/modules/ @simpleerp/core-team @simpleerp/module-maintainers
+
+# UI Shell
+/ui-shell/ @simpleerp/core-team @simpleerp/frontend-team
+
+# Documentation
+/docs/ @simpleerp/core-team @simpleerp/documentation-team
+
+# CI/CD
+/.github/ @simpleerp/core-team

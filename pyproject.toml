@@ -1,0 +1,81 @@
+[project]
+name = "serp-workspace"
+version = "1.0.0"
+description = "SimpleERP Platform Workspace"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "SimpleERP Team", email = "team@simpleerp.dev" }]
+license = { text = "MIT" }
+
+dependencies = [
+    "serp-core",
+    "serp-shell",
+    "serp-resources",
+    "serp-common",
+    "serp-crm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/serp-core",
+    "packages/serp-resources",
+    "packages/serp-shell",
+    "packages/serp-cli",
+    "modules/serp-users",
+    "modules/serp-common",
+    "modules/serp-crm",
+    "modules/serp-invoicing",
+    "modules/serp-sales",
+    "modules/serp-products",
+    "modules/serp-procurement",
+    "modules/serp-inventory",
+    "modules/serp-logistics",
+]
+
+[tool.uv.sources]
+# Workspace dependencies resolve locally
+serp-core = { workspace = true }
+serp-resources = { workspace = true }
+serp-shell = { workspace = true }
+serp-cli = { workspace = true }
+serp-users = { workspace = true }
+serp-common = { workspace = true }
+serp-crm = { workspace = true }
+serp-invoicing = { workspace = true }
+serp-sales = { workspace = true }
+serp-products = { workspace = true }
+serp-procurement = { workspace = true }
+serp-inventory = { workspace = true }
+serp-logistics = { workspace = true }
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "modules"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

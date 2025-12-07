@@ -1,0 +1,20 @@
+[project]
+name = "serp-inventory"
+version = "0.1.0"
+description = "SimpleERP Inventory Module"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "serp-core",
+    "serp-products",
+    "serp-procurement",
+    "pydantic>=2.0.0",
+    "fastapi>=0.104.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4.0", "pytest-asyncio>=0.21.0", "pytest-cov>=4.1.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,32 @@
+# {{ module_name }}
+
+> {{ description }}
+
+## Overview
+
+{{ module_display_name }} module for SimpleERP platform.
+
+## Installation
+
+```bash
+uv add {{ module_name }}
+```
+
+## Development
+
+```bash
+# Clone and install
+git clone https://github.com/your-org/{{ module_name }}.git
+cd {{ module_name }}
+uv sync
+
+# Run tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov={{ module_slug }}
+```
+
+## License
+
+MIT License - Copyright (c) {{ year }} {{ author }}

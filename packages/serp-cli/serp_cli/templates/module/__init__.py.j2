@@ -1,0 +1,22 @@
+"""
+{{ module_name }} - {{ description }}
+"""
+
+from serp_core.plugins import ModuleInfo
+
+__version__ = "0.1.0"
+
+MODULE_INFO = ModuleInfo(
+    name="{{ module_name }}",
+    version=__version__,
+    display_name="{{ module_display_name }}",
+    description="{{ description }}",
+    author="{{ author }}",
+    dependencies=["serp-core>=1.0.0"],
+    entry_points={
+        "api": "{{ module_slug }}.Interfaces.API:load_api_routes",
+        "ui": "{{ module_slug }}.UI:registry",
+    },
+)
+
+__all__ = ["__version__", "MODULE_INFO"]

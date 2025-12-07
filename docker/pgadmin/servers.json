@@ -1,0 +1,15 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "SimpleERP Local",
+            "Group": "Development",
+            "Host": "postgres",
+            "Port": 5432,
+            "MaintenanceDB": "serp",
+            "Username": "serp",
+            "Password": "serp",
+            "SSLMode": "prefer",
+            "PassFile": "/tmp/pgpassfile"
+        }
+    }
+}
