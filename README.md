@@ -8,47 +8,54 @@
 
 ---
 
+> **Note:** The Opnexo platform is powered by the internal **SERP engine** and `serp-*` packages.  
+> It was previously known as **SimpleERP (SERP)**. The technical namespace (`serp-*`) is kept for
+> stability and backward compatibility.
+
 ## Overview
 
-SimpleERP (SERP) is a modular ERP platform designed to enable:
+**Opnexo** is a modular ERP platform designed to enable:
 
 - **Core Team**: Build and maintain the platform foundation
 - **Community Developers**: Create industry-specific modules
 - **End Users**: Compose their ERP from available modules
 
+The platform architecture is built around a plugin-based, domain-driven design, allowing you to
+add or replace modules without changing the core.
+
 ## Architecture
 
-This monorepo contains:
+This monorepo contains the core **SERP engine** and official modules that power the Opnexo platform.
 
-### Core Packages
+### Core Packages (`serp-*`)
 
-- **serp-core**: Base classes, DDD patterns, plugin system
-- **serp-shell**: FastAPI application shell and runtime
-- **serp-cli**: Developer CLI tools for scaffolding and code generation
+- **serp-core** – Base classes, DDD patterns, plugin system
+- **serp-shell** – FastAPI application shell and runtime
+- **serp-cli** – Developer CLI tools for scaffolding and code generation
 
 ### Official Modules
 
-- **serp-users**: User management and authentication
-- **serp-crm**: Customer relationship management
-- **serp-invoicing**: Invoicing and billing
+- **serp-users** – User management and authentication
+- **serp-crm** – Customer relationship management
+- **serp-invoicing** – Invoicing and billing
 
 ### UI Shell
 
-- **ui-shell**: NextJS 14+ frontend application
+- **ui-shell** – Next.js 14+ frontend application for the Opnexo web UI
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - [uv](https://github.com/astral-sh/uv) package manager
-- Node.js 18+ (for UI shell)
+- Node.js 22+ (for UI shell)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/simpleerp/serp.git
+git clone https://github.com/opnexo/serp.git
 cd serp
 
 # Install Python dependencies
@@ -106,7 +113,10 @@ uv build
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+We welcome contributions to the Opnexo platform!
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on development workflow, coding standards,
+and how to propose new modules.
 
 ## Documentation
 
@@ -119,7 +129,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Links
-
-- [Documentation](https://docs.simpleerp.dev)
-- [Issue Tracker](https://github.com/simpleerp/serp/issues)
-- [Discussions](https://github.com/simpleerp/serp/discussions)
+- Product Name: Opnexo Platform
+- [Documentation](https://docs.opnexo.dev)
+- [Issue Tracker](https://github.com/opnexo/serp/issues)
+- [Discussions](https://github.com/opnexo/serp/discussions)
+- [Twitter](https://twitter.com/opnexodev)
