@@ -132,5 +132,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Product Name: Opnexo Platform
 - [Documentation](https://docs.opnexo.dev)
 - [Issue Tracker](https://github.com/opnexo/serp/issues)
-- [Discussions](https://github.com/opnexo/serp/discussions)
-- [Twitter](https://twitter.com/opnexodev)
+<!-- - [Discussions](https://github.com/opnexo/serp/discussions) -->
+<!-- - [Twitter](https://twitter.com/opnexodev) -->
