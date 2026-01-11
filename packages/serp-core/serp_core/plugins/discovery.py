@@ -4,9 +4,9 @@ Module discovery via Python entry points
 
 import importlib
 import importlib.metadata
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Coroutine, Dict, List
 
-from serp_core.plugins.types import ModuleInfo
+from serp_core.plugins.types import HealthCheckFunc, ModuleHealthReport, ModuleInfo
 
 
 def discover_modules() -> Dict[str, ModuleInfo]:
@@ -186,3 +186,53 @@ def load_all_ui_configs() -> Dict[str, Dict[str, Any]]:
             continue
 
     return loaded_configs
+
+
+def discover_health_checks() -> Dict[str, HealthCheckFunc]:
+    """
+    Discover all installed SERP module health checks via entry points.
+
+    Looks for modules that define the 'serp.modules.health' entry point group.
+    Each entry point should reference an async function that returns a ModuleHealthReport.
+
+    Returns:
+        Dictionary mapping module name to health check function
+
+    Example entry point in pyproject.toml:
+        [project.entry-points."serp.modules.health"]
+        crm = "serp_crm:health_check"
+    """
+    health_checks: Dict[str, HealthCheckFunc] = {}
+
+    try:
+        # Get all entry points in the 'serp.modules.health' group
+        entry_points = importlib.metadata.entry_points()
+
+        # Handle both old and new API
+        if hasattr(entry_points, "select"):
+            # Python 3.10+
+            serp_health_modules = entry_points.select(group="serp.modules.health")
+        else:
+            # Python 3.9
+            serp_health_modules = entry_points.get("serp.modules.health", [])
+
+        for entry_point in serp_health_modules:
+            try:
+                # Load the health check function
+                health_check = entry_point.load()
+
+                if callable(health_check):
+                    health_checks[entry_point.name] = health_check
+                else:
+                    print(
+                        f"Warning: {entry_point.name} health check is not callable"
+                    )
+
+            except Exception as e:
+                print(f"Error loading health check for module {entry_point.name}: {e}")
+                continue
+
+    except Exception as e:
+        print(f"Error discovering health checks: {e}")
+
+    return health_checks

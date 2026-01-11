@@ -41,6 +41,9 @@ crm = "serp_crm:MODULE_INFO"
 [project.entry-points."serp.modules.ui"]
 crm = "serp_crm.ui:load_ui_config"
 
+[project.entry-points."serp.modules.health"]
+crm = "serp_crm:health_check"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

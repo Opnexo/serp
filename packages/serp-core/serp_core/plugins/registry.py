@@ -2,22 +2,29 @@
 Module registry for tracking loaded modules
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Optional
 
-from serp_core.plugins.types import ModuleConfig, ModuleInfo
+from serp_core.plugins.types import (
+    HealthCheckFunc,
+    HealthStatus,
+    ModuleConfig,
+    ModuleHealthReport,
+    ModuleInfo,
+)
 
 
 class ModuleRegistry:
     """
     Central registry for all loaded modules.
 
-    Tracks module metadata, configuration, and loaded state.
+    Tracks module metadata, configuration, loaded state, and health checks.
     """
 
     def __init__(self) -> None:
         self._modules: Dict[str, ModuleInfo] = {}
         self._configs: Dict[str, ModuleConfig] = {}
         self._loaded: Dict[str, bool] = {}
+        self._health_checks: Dict[str, HealthCheckFunc] = {}
 
     def register(
         self, module_info: ModuleInfo, config: Optional[ModuleConfig] = None
@@ -80,6 +87,84 @@ class ModuleRegistry:
         self._modules.clear()
         self._configs.clear()
         self._loaded.clear()
+        self._health_checks.clear()
+
+    # Health check methods
+    def register_health_check(
+        self, module_name: str, health_check: HealthCheckFunc
+    ) -> None:
+        """
+        Register a health check function for a module.
+
+        Args:
+            module_name: Name of the module
+            health_check: Async function that returns ModuleHealthReport
+        """
+        self._health_checks[module_name] = health_check
+
+    def get_health_check(self, module_name: str) -> Optional[HealthCheckFunc]:
+        """Get the health check function for a module."""
+        return self._health_checks.get(module_name)
+
+    def has_health_check(self, module_name: str) -> bool:
+        """Check if a module has a registered health check."""
+        return module_name in self._health_checks
+
+    async def check_module_health(self, module_name: str) -> Optional[ModuleHealthReport]:
+        """
+        Run health check for a specific module.
+
+        Returns:
+            ModuleHealthReport if health check exists, None otherwise
+        """
+        health_check = self._health_checks.get(module_name)
+        if health_check:
+            return await health_check()
+        return None
+
+    async def check_all_health(self) -> Dict[str, ModuleHealthReport]:
+        """
+        Run health checks for all loaded modules.
+
+        Returns:
+            Dict mapping module names to their health reports
+        """
+        results: Dict[str, ModuleHealthReport] = {}
+        for module_name in self._health_checks:
+            if self._loaded.get(module_name, False):
+                try:
+                    report = await self._health_checks[module_name]()
+                    results[module_name] = report
+                except Exception as e:
+                    # Create an error report if health check fails
+                    module_info = self._modules.get(module_name)
+                    results[module_name] = ModuleHealthReport(
+                        module_id=module_name,
+                        module_name=module_info.display_name if module_info else module_name,
+                        status=HealthStatus.UNHEALTHY,
+                        version=module_info.version if module_info else "unknown",
+                        message=f"Health check failed: {str(e)}",
+                    )
+        return results
+
+    def get_overall_status(self, reports: Dict[str, ModuleHealthReport]) -> HealthStatus:
+        """
+        Determine overall system health from individual module reports.
+
+        Returns UNHEALTHY if any module is unhealthy,
+        DEGRADED if any module is degraded,
+        HEALTHY otherwise.
+        """
+        if not reports:
+            return HealthStatus.HEALTHY
+
+        statuses = [r.status for r in reports.values()]
+
+        if HealthStatus.UNHEALTHY in statuses:
+            return HealthStatus.UNHEALTHY
+        if HealthStatus.DEGRADED in statuses:
+            return HealthStatus.DEGRADED
+        return HealthStatus.HEALTHY
 
 
 # Global module registry instance

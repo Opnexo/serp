@@ -14,6 +14,7 @@ from serp_crm.application.services import (
 )
 from serp_crm.domain.entities import Contact, Lead, Opportunity, Partner
 from serp_crm.domain.value_objects import Address, Email, PhoneNumber
+from serp_crm.health import health_check
 
 __version__ = "0.1.0"
 
@@ -39,4 +40,5 @@ __all__ = [
     "LeadService",
     "OpportunityService",
     "MODULE_INFO",
+    "health_check",
 ]

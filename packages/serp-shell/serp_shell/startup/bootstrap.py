@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI
 from serp_core.plugins import (
     ModuleLoader,
+    create_simple_health_check,
     discover_modules,
     get_module_registry,
 )
@@ -70,5 +71,31 @@ async def bootstrap_application(app: FastAPI) -> None:
             except Exception as e:
                 logger.error(f"Error loading routes for {module_name}: {e}")
 
+    # 5. Register health checks from modules
+    logger.info("Registering module health checks...")
+    for module_name, entry_points in all_entry_points.items():
+        module_info = registry.get(module_name)
+        if not module_info:
+            continue
+
+        if "health" in entry_points:
+            # Module provides its own health check
+            try:
+                health_check = entry_points["health"]
+                registry.register_health_check(module_name, health_check)
+                logger.info(f"Registered custom health check for {module_name}")
+            except Exception as e:
+                logger.error(f"Error registering health check for {module_name}: {e}")
+        else:
+            # Create a simple default health check for modules without one
+            default_health = create_simple_health_check(
+                module_id=module_name,
+                module_name=module_info.display_name,
+                version=module_info.version,
+            )
+            registry.register_health_check(module_name, default_health)
+            logger.info(f"Registered default health check for {module_name}")
+
     logger.info("Application bootstrap complete")
     logger.info(f"Loaded {len(registry.loaded_modules())} modules")
+    logger.info(f"Registered {len([m for m in registry.loaded_modules() if registry.has_health_check(m.name)])} health checks")
