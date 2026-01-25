@@ -13,6 +13,8 @@ dependencies = [
     "serp-resources",
     "serp-common",
     "serp-crm",
+    "serp-dm",
+    "serp-pm",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +41,8 @@ members = [
     "modules/serp-procurement",
     "modules/serp-inventory",
     "modules/serp-logistics",
+    "modules/serp-dm",
+    "modules/serp-pm",
 ]
 
 [tool.uv.sources]
@@ -56,6 +60,8 @@ serp-products = { workspace = true }
 serp-procurement = { workspace = true }
 serp-inventory = { workspace = true }
 serp-logistics = { workspace = true }
+serp-dm = { workspace = true }
+serp-pm = { workspace = true }
 
 [tool.ruff]
 line-length = 88
