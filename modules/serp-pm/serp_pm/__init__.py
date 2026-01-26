@@ -17,6 +17,10 @@ MODULE_INFO = ModuleInfo(
     description="Core project management module - foundation for methodology extensions",
     author="SERP Team",
     dependencies=["serp-core>=1.0.0", "serp-resources>=0.1.0"],
+    entry_points={
+        "api": "serp_pm.interfaces.api.routes:load_api_routes",
+        "ui": "serp_pm.ui:load_ui_config",
+    },
 )
 
 __all__ = [

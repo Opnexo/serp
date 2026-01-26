@@ -14,7 +14,7 @@ from serp_core.domain.aggregate import AggregateRoot
 from serp_core.domain.entity import Entity
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Project(AggregateRoot):
     """
     Project aggregate root.
@@ -57,7 +57,7 @@ class Project(AggregateRoot):
         self.is_archived = True
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Task(Entity):
     """
     Generic task/work item entity.
@@ -104,7 +104,7 @@ class Task(Entity):
             self.tags.append(tag)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Team(Entity):
     """
     Team entity for project collaboration.
@@ -123,7 +123,7 @@ class Team(Entity):
         self.is_active = False
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TeamMember(Entity):
     """
     Team member assignment.
@@ -137,7 +137,7 @@ class TeamMember(Entity):
     joined_at: datetime = field(default_factory=datetime.utcnow)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Milestone(Entity):
     """
     Project milestone.
@@ -153,7 +153,7 @@ class Milestone(Entity):
     created_by: Optional[UUID] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Comment(Entity):
     """
     Comment on projects or tasks.
@@ -168,7 +168,7 @@ class Comment(Entity):
     parent_id: Optional[UUID] = None  # For threaded comments
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Attachment(Entity):
     """
     File attachment linked to projects or tasks.

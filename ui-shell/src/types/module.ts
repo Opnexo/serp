@@ -59,6 +59,13 @@ export interface ModuleRoute {
     exact?: boolean;
 }
 
+export interface HmrConfig {
+    /** Port for the Vite dev server */
+    port: number;
+    /** Whether HMR is enabled (typically true in development) */
+    enabled?: boolean;
+}
+
 export interface ModuleRegistry {
     moduleId: string;
     moduleName: string;
@@ -68,6 +75,8 @@ export interface ModuleRegistry {
     ribbon: RibbonTab;
     routes: ModuleRoute[];
     permissions: string[];
+    /** HMR configuration for development */
+    hmr?: HmrConfig;
 }
 
 export interface LoadedModule extends ModuleRegistry {

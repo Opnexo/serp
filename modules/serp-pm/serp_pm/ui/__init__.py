@@ -1,37 +1,128 @@
-"""UIconfiguration for Project Management module."""
+"""UI configuration for Project Management module."""
 
 from typing import Any
 
 
 def load_ui_config() -> dict[str, Any]:
-    """Load UI configuration for PM module."""
+    """
+    Load UI configuration for PM module.
+    
+    This configuration is discovered by the shell via entry points
+    and used to dynamically configure:
+    - Ribbon toolbar tabs and buttons
+    - Routes with their component mappings
+    - Module permissions
+    - HMR config for development
+    """
     return {
-        "module_id": "pm",
-        "module_name": "Project Management",
-        "toolbar": {
-            "tabs": [
+        "moduleId": "pm",
+        "moduleName": "Project Management",
+        "version": "0.1.0",
+        "icon": "Briefcase",
+        "description": "Project and task management",
+        # HMR configuration for development hot reload
+        "hmr": {
+            "port": 5173,
+        },
+        "ribbon": {
+            "tabId": "pm",
+            "tabLabel": "Projects",
+            "tabIcon": "Briefcase",
+            "tabOrder": 15,
+            "groups": [
                 {
-                    "id": "projects",
-                    "label": "Projects",
-                    "icon": "Briefcase",
-                    "groups": [
+                    "groupId": "pm-projects",
+                    "groupLabel": "Projects",
+                    "groupOrder": 1,
+                    "buttons": [
                         {
-                            "id": "new",
-                            "label": "New",
-                            "buttons": [
-                                {"id": "new_project", "label": "New Project", "icon": "Plus", "action": "pm.project.create", "permission": "pm.project.create"},
-                                {"id": "new_task", "label": "New Task", "icon": "CheckSquare", "action": "pm.task.create", "permission": "pm.task.create"},
-                            ],
+                            "buttonId": "pm-projects-list",
+                            "label": "All Projects",
+                            "icon": "List",
+                            "action": {
+                                "type": "navigate",
+                                "route": "/pm/projects",
+                            },
+                            "buttonOrder": 1,
+                            "tooltip": "View all projects",
+                        },
+                        {
+                            "buttonId": "pm-projects-new",
+                            "label": "New Project",
+                            "icon": "FolderPlus",
+                            "action": {
+                                "type": "navigate",
+                                "route": "/pm/projects/new",
+                            },
+                            "variant": "primary",
+                            "buttonOrder": 2,
+                            "tooltip": "Create a new project",
                         },
                     ],
-                }
+                },
+                {
+                    "groupId": "pm-tasks",
+                    "groupLabel": "Tasks",
+                    "groupOrder": 2,
+                    "buttons": [
+                        {
+                            "buttonId": "pm-tasks-list",
+                            "label": "All Tasks",
+                            "icon": "CheckSquare",
+                            "action": {
+                                "type": "navigate",
+                                "route": "/pm/tasks",
+                            },
+                            "buttonOrder": 1,
+                            "tooltip": "View all tasks",
+                        },
+                        {
+                            "buttonId": "pm-tasks-new",
+                            "label": "New Task",
+                            "icon": "Plus",
+                            "action": {
+                                "type": "navigate",
+                                "route": "/pm/tasks/new",
+                            },
+                            "buttonOrder": 2,
+                            "tooltip": "Create a new task",
+                        },
+                    ],
+                },
             ],
         },
         "routes": [
-            {"path": "/pm/projects", "name": "Projects", "component": "ProjectList", "permission": "pm.project.list"},
-            {"path": "/pm/tasks", "name": "Tasks", "component": "TaskList", "permission": "pm.task.list"},
+            {
+                "routeId": "pm-projects",
+                "path": "/pm/projects",
+                "component": "ProjectsListView",
+            },
+            {
+                "routeId": "pm-projects-new",
+                "path": "/pm/projects/new",
+                "component": "ProjectFormView",
+            },
+            {
+                "routeId": "pm-projects-detail",
+                "path": "/pm/projects/:id",
+                "component": "ProjectDetailView",
+            },
+            {
+                "routeId": "pm-tasks",
+                "path": "/pm/tasks",
+                "component": "TasksListView",
+            },
         ],
-        "navigation": [
-            {"label": "Projects", "icon": "Briefcase", "path": "/pm/projects", "permission": "pm.project.list"},
+        "permissions": [
+            "pm.project.list",
+            "pm.project.read",
+            "pm.project.create",
+            "pm.project.update",
+            "pm.project.delete",
+            "pm.task.list",
+            "pm.task.read",
+            "pm.task.create",
+            "pm.task.update",
+            "pm.task.delete",
         ],
     }

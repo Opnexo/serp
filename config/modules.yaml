@@ -1,0 +1,31 @@
+# SERP Module Configuration
+#
+# This file defines which modules are enabled in this deployment.
+# Modules listed here will be loaded by the shell on startup.
+#
+# Each module must be pip-installed separately. This config just
+# tells the shell which installed modules to activate.
+#
+# Example:
+#   pip install serp-pm
+#   # Then add to this file:
+#   - id: pm
+#     package: serp_pm
+#     enabled: true
+
+modules:
+  # Project Management Module
+  - id: pm
+    package: serp_pm
+    enabled: true
+    ui:
+      bundle_path: /api/modules/pm/bundle.js
+      hmr_port: 5173
+
+  # Add more modules as needed:
+  # - id: crm
+  #   package: serp_crm
+  #   enabled: true
+  #   ui:
+  #     bundle_path: /api/modules/crm/bundle.js
+  #     hmr_port: 5174

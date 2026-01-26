@@ -37,6 +37,10 @@ dev = [
     "black>=23.0.0",
     "ruff>=0.1.0",
 ]
+# Modules are optional - installed per environment
+modules = [
+    "serp-pm",
+]
 
 [project.scripts]
 serp = "serp_shell.cli.commands:main"

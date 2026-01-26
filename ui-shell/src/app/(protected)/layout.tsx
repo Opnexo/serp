@@ -1,5 +1,6 @@
 'use client';
 
+import { ReactNode } from 'react';
 import { AuthGuard } from '@/lib/auth';
 import { Shell } from '@/components/Shell';
 import { Ribbon } from '@/components/Ribbon';
@@ -7,7 +8,7 @@ import { Ribbon } from '@/components/Ribbon';
 export default function ProtectedLayout({
     children,
 }: {
-    children: React.ReactNode;
+    children: ReactNode;
 }) {
     return (
         <AuthGuard>

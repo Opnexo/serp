@@ -12,9 +12,11 @@ members = [
     "serp-common",
     "serp-core",
     "serp-crm",
+    "serp-dm",
     "serp-inventory",
     "serp-invoicing",
     "serp-logistics",
+    "serp-pm",
     "serp-procurement",
     "serp-products",
     "serp-resources",
@@ -1738,6 +1740,48 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [[package]]
+name = "serp-dm"
+version = "0.1.0"
+source = { editable = "modules/serp-dm" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dateutil" },
+    { name = "serp-core" },
+    { name = "serp-resources" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13.0" },
+    { name = "asyncpg", specifier = ">=0.29.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
+    { name = "python-dateutil", specifier = ">=2.8.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "serp-core", editable = "packages/serp-core" },
+    { name = "serp-resources", editable = "packages/serp-resources" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.0" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "serp-inventory"
 version = "0.1.0"
 source = { editable = "modules/serp-inventory" }
@@ -1836,6 +1880,48 @@ requires-dist = [
     { name = "serp-inventory", editable = "modules/serp-inventory" },
     { name = "serp-products", editable = "modules/serp-products" },
     { name = "serp-sales", editable = "modules/serp-sales" },
+]
+provides-extras = ["dev"]
+
+[[package]]
+name = "serp-pm"
+version = "0.1.0"
+source = { editable = "modules/serp-pm" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dateutil" },
+    { name = "serp-core" },
+    { name = "serp-resources" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13.0" },
+    { name = "asyncpg", specifier = ">=0.29.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
+    { name = "python-dateutil", specifier = ">=2.8.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "serp-core", editable = "packages/serp-core" },
+    { name = "serp-resources", editable = "packages/serp-resources" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.0" },
 ]
 provides-extras = ["dev"]
 
@@ -1992,6 +2078,9 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+modules = [
+    { name = "serp-pm" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -2009,9 +2098,10 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "serp-core", editable = "packages/serp-core" },
+    { name = "serp-pm", marker = "extra == 'modules'", editable = "modules/serp-pm" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.27.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "modules"]
 
 [[package]]
 name = "serp-users"
@@ -2059,6 +2149,8 @@ dependencies = [
     { name = "serp-common" },
     { name = "serp-core" },
     { name = "serp-crm" },
+    { name = "serp-dm" },
+    { name = "serp-pm" },
     { name = "serp-resources" },
     { name = "serp-shell" },
 ]
@@ -2082,6 +2174,8 @@ requires-dist = [
     { name = "serp-common", editable = "modules/serp-common" },
     { name = "serp-core", editable = "packages/serp-core" },
     { name = "serp-crm", editable = "modules/serp-crm" },
+    { name = "serp-dm", editable = "modules/serp-dm" },
+    { name = "serp-pm", editable = "modules/serp-pm" },
     { name = "serp-resources", editable = "packages/serp-resources" },
     { name = "serp-shell", editable = "packages/serp-shell" },
 ]

@@ -6,7 +6,7 @@ import traceback
 from typing import Any, Dict
 
 from fastapi import APIRouter
-from serp_core.plugins.discovery import load_all_ui_configs
+from serp_core.plugins.discovery import load_all_ui_configs_from_yaml
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ async def get_ui_config() -> Dict[str, Any]:
         print("=" * 80)
 
         print("Loading UI configs...")
-        ui_configs = load_all_ui_configs()
+        ui_configs = load_all_ui_configs_from_yaml()
 
         print(f"Loaded {len(ui_configs)} module configs:")
         for module_name, config in ui_configs.items():
@@ -89,7 +89,7 @@ async def get_module_ui_config(module_name: str) -> Dict[str, Any]:
         UI configuration dict for the specified module, or 404 if not found
     """
     try:
-        ui_configs = load_all_ui_configs()
+        ui_configs = load_all_ui_configs_from_yaml()
 
         if module_name in ui_configs:
             return ui_configs[module_name]

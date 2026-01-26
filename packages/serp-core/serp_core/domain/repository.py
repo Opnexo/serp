@@ -98,3 +98,7 @@ class Repository(ABC, Generic[TEntity]):
         """
         entity = await self.find_by_id(entity_id)
         return entity is not None
+
+
+# Alias for interface-style naming convention
+IRepository = Repository

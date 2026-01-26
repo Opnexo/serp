@@ -9,7 +9,7 @@ import NextLink from 'next/link';
 import NextImage from 'next/image';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth';
-import { PermissionProvider } from '@/lib/permissions';
+import { PermissionsProvider } from '@/lib/permissions';
 import { ModuleProvider } from '@/lib/modules';
 // Import all UI components to expose globally
 import * as SerpUI from '@/components/ui';
@@ -50,9 +50,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <PermissionProvider>
+                <PermissionsProvider>
                     <ModuleProvider>{children}</ModuleProvider>
-                </PermissionProvider>
+                </PermissionsProvider>
             </AuthProvider>
         </QueryClientProvider>
     );

@@ -34,6 +34,13 @@ class InMemoryProjectRepository(IProjectRepository):
     async def find_by_status(self, status: str) -> list[Project]:
         return [p for p in self._projects.values() if p.status == status]
 
+    # Aliases for base Repository interface
+    async def find_by_id(self, entity_id: UUID) -> Optional[Project]:
+        return await self.get_by_id(entity_id)
+
+    async def find_all(self) -> list[Project]:
+        return await self.list_all()
+
 
 class InMemoryTaskRepository(ITaskRepository):
     """In-memory task repository."""
@@ -65,6 +72,13 @@ class InMemoryTaskRepository(ITaskRepository):
     async def find_by_status(self, status: str) -> list[Task]:
         return [t for t in self._tasks.values() if t.status == status]
 
+    # Aliases for base Repository interface
+    async def find_by_id(self, entity_id: UUID) -> Optional[Task]:
+        return await self.get_by_id(entity_id)
+
+    async def find_all(self) -> list[Task]:
+        return await self.list_all()
+
 
 class InMemoryTeamRepository(ITeamRepository):
     """In-memory team repository."""
@@ -92,3 +106,10 @@ class InMemoryTeamRepository(ITeamRepository):
             if team.project_id == project_id:
                 return team
         return None
+
+    # Aliases for base Repository interface
+    async def find_by_id(self, entity_id: UUID) -> Optional[Team]:
+        return await self.get_by_id(entity_id)
+
+    async def find_all(self) -> list[Team]:
+        return await self.list_all()

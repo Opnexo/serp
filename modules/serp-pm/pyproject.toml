@@ -41,6 +41,9 @@ pm = "serp_pm:MODULE_INFO"
 [project.entry-points."serp.modules.ui"]
 pm = "serp_pm.ui:load_ui_config"
 
+[project.entry-points."serp.modules.api"]
+pm = "serp_pm.interfaces.api.routes:load_api_routes"
+
 [project.entry-points."serp.pm.project_types"]
 generic = "serp_pm.types.generic:GenericProjectType"
 kanban = "serp_pm.types.kanban:KanbanProjectType"

@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Entity(ABC):
     """
     Base class for domain entities.

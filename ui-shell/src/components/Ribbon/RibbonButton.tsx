@@ -31,7 +31,15 @@ export function RibbonButton({ button }: RibbonButtonProps) {
                     button.action.handler();
                 }
                 break;
-            // TODO: Handle modal and command actions
+            case 'modal':
+                if (button.action.modalId) {
+                    // Import dynamically to avoid circular dependencies
+                    import('@/lib/modals/modalRegistry').then(({ modalRegistry }) => {
+                        modalRegistry.open(button.action.modalId!);
+                    });
+                }
+                break;
+            // TODO: Handle command actions
         }
     };
 

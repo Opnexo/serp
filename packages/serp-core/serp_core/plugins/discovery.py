@@ -236,3 +236,31 @@ def discover_health_checks() -> Dict[str, HealthCheckFunc]:
         print(f"Error discovering health checks: {e}")
 
     return health_checks
+
+
+def load_all_ui_configs_from_yaml() -> Dict[str, Dict[str, Any]]:
+    """
+    Load all UI configurations using YAML config file.
+
+    This is the preferred method in production as it doesn't require
+    entry point discovery (which can be slow and fragile).
+
+    Falls back to entry point discovery if no config file is found.
+
+    Returns:
+        Dictionary mapping module name to UI config dict
+    """
+    # Import here to avoid circular imports
+    from serp_core.config.modules import (
+        find_config_file,
+        load_all_module_ui_configs,
+    )
+
+    # Check if we have a config file
+    if find_config_file() is not None:
+        print("Using config-based module discovery (modules.yaml)")
+        return load_all_module_ui_configs()
+
+    # Fall back to entry point discovery
+    print("Config file not found, falling back to entry point discovery")
+    return load_all_ui_configs()
