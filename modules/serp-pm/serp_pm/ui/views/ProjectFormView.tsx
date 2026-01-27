@@ -149,7 +149,7 @@ export default function ProjectFormView() {
     const selectedType = projectTypes.find(t => t.type_id === formData.project_type);
 
     return (
-        <div className="mx-auto max-w-2xl space-y-6 p-6">
+        <div className="w-full space-y-6 p-6">
             <div>
                 <h1 className="text-2xl font-bold">Create New Project</h1>
                 <p className="text-muted-foreground">
@@ -163,106 +163,110 @@ export default function ProjectFormView() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <Card className="p-6">
-                    <div className="space-y-4">
-                        {/* Project Name */}
-                        <div className="space-y-2">
-                            <Label htmlFor="name">
-                                Project Name <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="name"
-                                placeholder="Enter project name"
-                                value={formData.name}
-                                onChange={(e) => handleChange('name', e.target.value)}
-                                error={errors.name}
-                                disabled={isSubmitting}
-                            />
-                        </div>
+            <form onSubmit={handleSubmit}>
+                <div className="grid gap-6 md:grid-cols-2 md:items-start">
+                    {/* Main Column - General Details */}
+                    <Card className="p-6">
+                        <div className="space-y-4">
+                            {/* Project Name */}
+                            <div className="space-y-2">
+                                <Label htmlFor="name">
+                                    Project Name <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="name"
+                                    placeholder="Enter project name"
+                                    value={formData.name}
+                                    onChange={(e) => handleChange('name', e.target.value)}
+                                    error={errors.name}
+                                    disabled={isSubmitting}
+                                />
+                            </div>
 
-                        {/* Project Type */}
-                        <div className="space-y-2">
-                            <Label htmlFor="project_type">
-                                Project Type <span className="text-destructive">*</span>
-                            </Label>
-                            {isLoadingTypes ? (
-                                <div className="flex h-10 items-center">
-                                    <Spinner size="sm" />
-                                    <span className="ml-2 text-sm text-muted-foreground">
-                                        Loading project types...
-                                    </span>
-                                </div>
-                            ) : (
-                                <>
-                                    <Select
-                                        id="project_type"
-                                        value={formData.project_type}
-                                        onChange={(value) => handleChange('project_type', value)}
-                                        options={projectTypes.map(type => ({
-                                            value: type.type_id,
-                                            label: type.display_name,
-                                        }))}
-                                        error={errors.project_type}
-                                        disabled={isSubmitting}
-                                    />
-                                    {selectedType && (
-                                        <p className="text-sm text-muted-foreground">
-                                            {selectedType.description}
-                                        </p>
-                                    )}
-                                </>
-                            )}
-                        </div>
+                            {/* Project Type */}
+                            <div className="space-y-2">
+                                <Label htmlFor="project_type">
+                                    Project Type <span className="text-destructive">*</span>
+                                </Label>
+                                {isLoadingTypes ? (
+                                    <div className="flex h-10 items-center">
+                                        <Spinner size="sm" />
+                                        <span className="ml-2 text-sm text-muted-foreground">
+                                            Loading project types...
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Select
+                                            id="project_type"
+                                            value={formData.project_type}
+                                            onChange={(value) => handleChange('project_type', value)}
+                                            options={projectTypes.map(type => ({
+                                                value: type.type_id,
+                                                label: type.display_name,
+                                            }))}
+                                            error={errors.project_type}
+                                            disabled={isSubmitting}
+                                        />
+                                        {selectedType && (
+                                            <p className="text-sm text-muted-foreground">
+                                                {selectedType.description}
+                                            </p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
 
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Describe your project..."
-                                value={formData.description}
-                                onChange={(e) => handleChange('description', e.target.value)}
-                                rows={4}
-                                disabled={isSubmitting}
-                            />
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Describe your project..."
+                                    value={formData.description}
+                                    onChange={(e) => handleChange('description', e.target.value)}
+                                    rows={4}
+                                    disabled={isSubmitting}
+                                />
+                            </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
 
-                <Card className="p-6">
-                    <h2 className="mb-4 text-lg font-semibold">Timeline</h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {/* Start Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="start_date">Start Date</Label>
-                            <Input
-                                id="start_date"
-                                type="date"
-                                value={formData.start_date}
-                                onChange={(e) => handleChange('start_date', e.target.value)}
-                                error={errors.start_date}
-                                disabled={isSubmitting}
-                            />
-                        </div>
+                    {/* Side Column - Timeline */}
+                    <Card className="p-6">
+                        <h2 className="mb-4 text-lg font-semibold">Timeline</h2>
+                        <div className="space-y-4">
+                            {/* Start Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="start_date">Start Date</Label>
+                                <Input
+                                    id="start_date"
+                                    type="date"
+                                    value={formData.start_date}
+                                    onChange={(e) => handleChange('start_date', e.target.value)}
+                                    error={errors.start_date}
+                                    disabled={isSubmitting}
+                                />
+                            </div>
 
-                        {/* End Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="end_date">End Date</Label>
-                            <Input
-                                id="end_date"
-                                type="date"
-                                value={formData.end_date}
-                                onChange={(e) => handleChange('end_date', e.target.value)}
-                                error={errors.end_date}
-                                disabled={isSubmitting}
-                            />
+                            {/* End Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="end_date">End Date</Label>
+                                <Input
+                                    id="end_date"
+                                    type="date"
+                                    value={formData.end_date}
+                                    onChange={(e) => handleChange('end_date', e.target.value)}
+                                    error={errors.end_date}
+                                    disabled={isSubmitting}
+                                />
+                            </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+                </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3">
+                <div className="mt-6 flex justify-end gap-3">
                     <Button
                         type="button"
                         variant="outline"
