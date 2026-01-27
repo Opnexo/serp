@@ -23,15 +23,7 @@ export const MODULE_VERSION = '0.1.0';
 export const components: Record<string, () => Promise<{ default: ComponentType<any> }>> = {
     ProjectsListView: () => Promise.resolve({ default: ProjectsListView }),
     // Placeholder views
-    ProjectFormView: () =>
-        Promise.resolve({
-            default: () => (
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold">New Project</h1>
-                    <p className="text-muted-foreground">Coming soon...</p>
-                </div>
-            ),
-        }),
+    ProjectFormView: () => import('./views/ProjectFormView'),
     ProjectDetailView: () =>
         Promise.resolve({
             default: () => (

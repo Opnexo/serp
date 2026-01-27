@@ -97,12 +97,12 @@ export const pmModuleRegistry: ModuleRegistry = {
             permission: PM_PERMISSIONS.PROJECT_LIST,
             component: () => import('./views/ProjectsListView'),
         },
-        // {
-        //     routeId: 'pm-projects-new',
-        //     path: '/pm/projects/new',
-        //     permission: PM_PERMISSIONS.PROJECT_CREATE,
-        //     component: () => import('./views/ProjectFormView'),
-        // },
+        {
+            routeId: 'pm-projects-new',
+            path: '/pm/projects/new',
+            permission: PM_PERMISSIONS.PROJECT_CREATE,
+            component: () => import('./views/ProjectFormView'),
+        },
         // {
         //     routeId: 'pm-projects-detail',
         //     path: '/pm/projects/:id',

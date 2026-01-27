@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Table, Badge, Spinner, Empty } from '@/components/ui';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableRow,
+    TableHead,
+    TableCell,
+    Badge,
+    Spinner,
+    Empty,
+} from '@/components/ui';
 
 interface Project {
     id: string;
@@ -96,32 +106,32 @@ export default function ProjectsListView() {
             </div>
 
             <Table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead>Created</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
                     {projects.map((project) => (
-                        <tr key={project.id}>
-                            <td className="font-medium">{project.name}</td>
-                            <td className="capitalize">{project.project_type}</td>
-                            <td>
+                        <TableRow key={project.id}>
+                            <TableCell className="font-medium">{project.name}</TableCell>
+                            <TableCell className="capitalize">{project.project_type}</TableCell>
+                            <TableCell>
                                 <Badge variant={getStatusBadgeVariant(project.status)}>
                                     {project.status.replace('_', ' ')}
                                 </Badge>
-                            </td>
-                            <td>{formatDate(project.start_date)}</td>
-                            <td>{formatDate(project.end_date)}</td>
-                            <td>{formatDate(project.created_at)}</td>
-                        </tr>
+                            </TableCell>
+                            <TableCell>{formatDate(project.start_date)}</TableCell>
+                            <TableCell>{formatDate(project.end_date)}</TableCell>
+                            <TableCell>{formatDate(project.created_at)}</TableCell>
+                        </TableRow>
                     ))}
-                </tbody>
+                </TableBody>
             </Table>
         </div>
     );

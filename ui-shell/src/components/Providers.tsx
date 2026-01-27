@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth';
 import { PermissionsProvider } from '@/lib/permissions';
 import { ModuleProvider } from '@/lib/modules';
+import { ThemeProvider } from 'next-themes';
 // Import all UI components to expose globally
 import * as SerpUI from '@/components/ui';
 
@@ -47,13 +48,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
             })
     );
 
+
     return (
         <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <PermissionsProvider>
-                    <ModuleProvider>{children}</ModuleProvider>
-                </PermissionsProvider>
-            </AuthProvider>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+                storageKey="serp-ui-theme"
+            >
+                <AuthProvider>
+                    <PermissionsProvider>
+                        <ModuleProvider>{children}</ModuleProvider>
+                    </PermissionsProvider>
+                </AuthProvider>
+            </ThemeProvider>
         </QueryClientProvider>
     );
 }

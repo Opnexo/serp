@@ -13,7 +13,7 @@ class PMSettings(BaseSettings):
     module_version: str = "0.1.0"
 
     # Database configuration
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/serp"
+    database_url: str = "postgresql+asyncpg://serp:serp@localhost:5432/serp"
     database_schema: str = "pm"  # PostgreSQL schema for this module
     database_echo: bool = False
     database_pool_size: int = 5

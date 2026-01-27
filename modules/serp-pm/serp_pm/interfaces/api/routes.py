@@ -17,16 +17,23 @@ from serp_pm.application.services import ProjectService, TaskService
 
 router = APIRouter()
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from serp_pm.infrastructure.persistence.database import get_db_session
+from serp_pm.infrastructure.persistence.repositories.postgres import (
+    PostgresProjectRepository,
+    PostgresTaskRepository,
+)
 
-# Simplified dependency (use proper DI in production)
-def get_project_service() -> ProjectService:
-    from serp_pm.infrastructure.persistence.repositories.memory import InMemoryProjectRepository
-    return ProjectService(InMemoryProjectRepository())
+
+# Dependency Injection
+def get_project_service(session: AsyncSession = Depends(get_db_session)) -> ProjectService:
+    """Get project service with Postgres repository."""
+    return ProjectService(PostgresProjectRepository(session))
 
 
-def get_task_service() -> TaskService:
-    from serp_pm.infrastructure.persistence.repositories.memory import InMemoryTaskRepository
-    return TaskService(InMemoryTaskRepository())
+def get_task_service(session: AsyncSession = Depends(get_db_session)) -> TaskService:
+    """Get task service with Postgres repository."""
+    return TaskService(PostgresTaskRepository(session))
 
 
 # Project routes
