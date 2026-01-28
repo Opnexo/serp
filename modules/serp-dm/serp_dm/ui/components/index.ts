@@ -1,0 +1,1 @@
+export { ProjectDocumentsWidget } from './ProjectDocumentsWidget';

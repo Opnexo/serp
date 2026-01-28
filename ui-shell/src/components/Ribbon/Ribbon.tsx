@@ -19,8 +19,8 @@ export function Ribbon() {
         pathname?.startsWith(`/${m.moduleId}`)
     );
 
-    const currentTabId = activeTabId || activeModule?.ribbon.tabId || null;
-    const currentTab = modules.find((m) => m.ribbon.tabId === currentTabId);
+    const currentTabId = activeTabId || activeModule?.ribbon?.tabId || null;
+    const currentTab = modules.find((m) => m.ribbon?.tabId === currentTabId);
 
     return (
         <div className="border-b border-gray-700 bg-[#2b2b2b]">
@@ -32,7 +32,7 @@ export function Ribbon() {
             />
 
             {/* Ribbon Content */}
-            {currentTab && (
+            {currentTab?.ribbon && (
                 <RibbonContent ribbon={currentTab.ribbon} />
             )}
         </div>

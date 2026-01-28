@@ -1,1 +1,68 @@
 """Application layer for Document Management module."""
+
+from serp_dm.application.dto import (
+    ApprovalDecisionRequest,
+    ApprovalRequestDTO,
+    CreateDocumentTypeRequest,
+    CreateFolderRequest,
+    CreateStageRequest,
+    CreateStorageTemplateRequest,
+    DocumentDTO,
+    DocumentListResponse,
+    DocumentTypeDTO,
+    DocumentVersionDTO,
+    FolderDTO,
+    KanbanBoardResponse,
+    MoveDocumentRequest,
+    RegisterDocumentRequest,
+    ReorderStagesRequest,
+    StageDTO,
+    StorageTemplateDTO,
+    SubmitForApprovalRequest,
+    UpdateDocumentRequest,
+    UpdateDocumentTypeRequest,
+    UpdateStageRequest,
+    UploadVersionRequest,
+)
+from serp_dm.application.services import (
+    DocumentService,
+    DocumentTypeService,
+    FolderService,
+    StageService,
+    StorageTemplateService,
+    VersioningService,
+)
+
+__all__ = [
+    # DTOs - Request
+    "RegisterDocumentRequest",
+    "UpdateDocumentRequest",
+    "UploadVersionRequest",
+    "CreateStageRequest",
+    "UpdateStageRequest",
+    "ReorderStagesRequest",
+    "CreateFolderRequest",
+    "CreateStorageTemplateRequest",
+    "CreateDocumentTypeRequest",
+    "UpdateDocumentTypeRequest",
+    "MoveDocumentRequest",
+    "SubmitForApprovalRequest",
+    "ApprovalDecisionRequest",
+    # DTOs - Response
+    "DocumentDTO",
+    "DocumentVersionDTO",
+    "StageDTO",
+    "FolderDTO",
+    "StorageTemplateDTO",
+    "DocumentTypeDTO",
+    "ApprovalRequestDTO",
+    "DocumentListResponse",
+    "KanbanBoardResponse",
+    # Services
+    "DocumentService",
+    "VersioningService",
+    "StageService",
+    "FolderService",
+    "DocumentTypeService",
+    "StorageTemplateService",
+]

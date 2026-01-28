@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.className} style-lyra`}>
+            <body className={`${inter.className} style-lyra`} suppressHydrationWarning>
                 <Providers>{children}</Providers>
             </body>
         </html>
