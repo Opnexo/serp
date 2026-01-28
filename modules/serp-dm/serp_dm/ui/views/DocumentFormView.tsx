@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Card,
@@ -60,7 +60,8 @@ export default function DocumentFormView() {
     const [tags, setTags] = useState('');
     const [externalRefs, setExternalRefs] = useState('');
 
-    const projectId = searchParams.get('project');
+    // Get projectId from URL params
+    const projectIdParam = searchParams?.get('project') || null;
 
     useEffect(() => {
         const loadReferenceData = async () => {
@@ -74,14 +75,17 @@ export default function DocumentFormView() {
                 }
 
                 // Fetch stages and folders if project is selected
-                if (projectId) {
-                    const stagesRes = await fetch(`/api/dm/projects/${projectId}/stages`);
+                if (projectIdParam) {
+                    const [stagesRes, foldersRes] = await Promise.all([
+                        fetch(`/api/dm/projects/${projectIdParam}/stages`),
+                        fetch(`/api/dm/projects/${projectIdParam}/folders`),
+                    ]);
+
                     if (stagesRes.ok) {
                         const stagesData = await stagesRes.json();
                         setStages(stagesData.items || []);
                     }
 
-                    const foldersRes = await fetch(`/api/dm/projects/${projectId}/folders`);
                     if (foldersRes.ok) {
                         const foldersData = await foldersRes.json();
                         setFolders(foldersData.items || []);
@@ -95,12 +99,12 @@ export default function DocumentFormView() {
         };
 
         loadReferenceData();
-    }, [projectId]);
+    }, []); // Empty dependency array - only run once on mount
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!projectId) {
+        if (!projectIdParam) {
             setError('Please select a project first');
             return;
         }
@@ -114,11 +118,11 @@ export default function DocumentFormView() {
         setError(null);
 
         try {
-            const response = await fetch(`/api/dm/projects/${projectId}/documents`, {
+            const response = await fetch(`/api/dm/projects/${projectIdParam}/documents`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    project_id: projectId,
+                    project_id: projectIdParam,
                     title: title.trim(),
                     document_type_id: documentTypeId,
                     stage_id: stageId || undefined,

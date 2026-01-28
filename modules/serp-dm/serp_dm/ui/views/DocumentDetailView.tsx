@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import {
     Card,
     CardHeader,
@@ -29,7 +29,25 @@ import {
     Tag,
     Folder,
     History,
+    Trash2,
+    Move,
+    Edit,
 } from 'lucide-react';
+import UploadVersionDialog from '../components/UploadVersionDialog';
+import MoveDocumentDialog from '../components/MoveDocumentDialog';
+
+// ... (Types remain the same as existing file, can omit for brevity in replacement if I could, 
+// but replace_file_content replaces block. I need to be careful to include everything or use multi_replace. 
+// I'll provide the full file or strategic chunks. Given the file size, chunk replacement is safer/better 
+// if I can target specific areas, but I need to add imports and state. 
+// I'll use replace_file_content on the whole file or large chunks to be safe.)
+// Wait, replace_file_content works on line ranges. I can do multiple chunks.
+// Actually, I'll use multi_replace_file_content to insert imports and then update the component body.
+// But first let me just check if I can assume imports are at the top.
+// I will rewrite the component part to include the dialog state and dialogs in JSX.
+
+// Due to tool limitations/preference, I'll use multi_replace_file_content.
+
 
 interface Document {
     id: string;
@@ -74,39 +92,65 @@ interface Version {
 }
 
 export default function DocumentDetailView() {
-    const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
+    const params = useParams<{ id: string }>();
+    const id = params?.id;
+    const router = useRouter();
     const [document, setDocument] = useState<Document | null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchDocument = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                // Fetch document
-                const docRes = await fetch(`/api/dm/documents/${id}`);
-                if (!docRes.ok) throw new Error('Document not found');
-                const doc = await docRes.json();
-                setDocument(doc);
+    // Dialog states
+    const [showUploadDialog, setShowUploadDialog] = useState(false);
+    const [showMoveDialog, setShowMoveDialog] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-                // Fetch versions
-                const versionsRes = await fetch(`/api/dm/documents/${id}/versions`);
-                if (versionsRes.ok) {
-                    const versionsData = await versionsRes.json();
-                    setVersions(versionsData);
-                }
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An error occurred');
-            } finally {
-                setIsLoading(false);
+    const fetchDocument = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Fetch document
+            const docRes = await fetch(`/api/dm/documents/${id}`);
+            if (!docRes.ok) throw new Error('Document not found');
+            const doc = await docRes.json();
+            setDocument(doc);
+
+            // Fetch versions
+            const versionsRes = await fetch(`/api/dm/documents/${id}/versions`);
+            if (versionsRes.ok) {
+                const versionsData = await versionsRes.json();
+                setVersions(versionsData);
             }
-        };
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+    useEffect(() => {
         if (id) fetchDocument();
     }, [id]);
+
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to move this document to trash?')) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const response = await fetch(`/api/dm/documents/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) throw new Error('Failed to delete document');
+
+            router.push('/dm/projects');
+        } catch (err) {
+            alert('Failed to delete document');
+            setIsDeleting(false);
+        }
+    };
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleDateString(undefined, {
@@ -154,7 +198,7 @@ export default function DocumentDetailView() {
     if (error || !document) {
         return (
             <div className="space-y-4">
-                <Button variant="ghost" onClick={() => navigate(-1)}>
+                <Button variant="ghost" onClick={() => router.back()}>
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Back
                 </Button>
@@ -173,7 +217,7 @@ export default function DocumentDetailView() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(-1)}
+                        onClick={() => router.back()}
                         className="-ml-2"
                     >
                         <ChevronLeft className="mr-1 h-4 w-4" />
@@ -187,9 +231,22 @@ export default function DocumentDetailView() {
                     )}
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setShowMoveDialog(true)}>
+                        <Move className="mr-2 h-4 w-4" />
+                        Move
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
                         <Upload className="mr-2 h-4 w-4" />
                         Upload Version
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        title="Delete Document"
+                    >
+                        <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
             </div>

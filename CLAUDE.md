@@ -322,6 +322,13 @@ uv run pre-commit install
 
 ---
 
+User Interface
+
+- Use shadcn/ui for consistent design
+- Follow component structure in `ui/` folders of each module
+
+---
+
 ## Questions to Ask Before Making Changes
 
 1. **Which package/module does this belong to?**

@@ -64,24 +64,12 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
                 if (id === 'react' || id === 'react-dom' || id === 'react/jsx-runtime') {
                     return true;
                 }
-                // React Router
-                if (id === 'react-router-dom' || id.startsWith('react-router')) {
-                    return true;
-                }
                 // Next.js
                 if (id.startsWith('next/')) {
                     return true;
                 }
                 // Lucide icons
                 if (id === 'lucide-react') {
-                    return true;
-                }
-                // MUI (externalize to shell)
-                if (id.startsWith('@mui/')) {
-                    return true;
-                }
-                // dnd-kit (externalize to shell)
-                if (id.startsWith('@dnd-kit/')) {
                     return true;
                 }
                 // Shell UI components (check both alias and resolved path)
@@ -96,15 +84,11 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
                     if (id === 'react') return 'React';
                     if (id === 'react-dom') return 'ReactDOM';
                     if (id === 'react/jsx-runtime') return 'ReactJSXRuntime';
-                    if (id === 'react-router-dom') return 'ReactRouterDOM';
                     if (id === 'next/navigation') return 'NextNavigation';
                     if (id === 'next/link') return 'NextLink';
                     if (id === 'next/image') return 'NextImage';
                     if (id === 'next/router') return 'NextRouter';
                     if (id === 'lucide-react') return 'LucideReact';
-                    if (id.startsWith('@mui/material')) return 'MuiMaterial';
-                    if (id.startsWith('@mui/icons-material')) return 'MuiIcons';
-                    if (id.startsWith('@dnd-kit/')) return 'DndKit';
                     if (id === '@/components/ui' || id.includes('ui-shell/src/components/ui')) {
                         return 'SerpUI';
                     }

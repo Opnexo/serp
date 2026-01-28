@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Suspense, useState, useEffect, ComponentType } from 'react';
+import { Suspense, useState, useEffect, useMemo, ComponentType } from 'react';
 import { useModules, componentRegistry, moduleLoader } from '@/lib/modules';
 import { Spinner, Empty } from '@/components/ui';
 
@@ -23,8 +23,8 @@ export default function ModuleRoutePage() {
     const [isLoadingComponent, setIsLoadingComponent] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Find matching route from registered modules
-    const matchedRoute = (() => {
+    // Find matching route from registered modules - memoized to prevent infinite loops
+    const matchedRoute = useMemo(() => {
         for (const mod of modules) {
             for (const route of mod.routes) {
                 // Simple path matching (supports :id params)
@@ -38,7 +38,11 @@ export default function ModuleRoutePage() {
             }
         }
         return null;
-    })();
+    }, [modules, path]);
+
+    // Extract stable values for useEffect dependencies
+    const moduleId = matchedRoute?.module.moduleId;
+    const componentName = matchedRoute?.route.component as unknown as string;
 
     // Load the component when route matches
     useEffect(() => {
@@ -49,7 +53,7 @@ export default function ModuleRoutePage() {
         }
 
         const { module: mod, route } = matchedRoute;
-        const componentName = route.component as unknown as string;
+        const compName = route.component as unknown as string;
 
         async function loadComponent() {
             setIsLoadingComponent(true);
@@ -67,12 +71,12 @@ export default function ModuleRoutePage() {
                 }
 
                 // Get the component loader from the registry
-                console.log(`🔵 Getting component: ${componentName} from ${mod.moduleId}`);
-                const componentLoader = componentRegistry.getComponent(mod.moduleId, componentName);
+                console.log(`🔵 Getting component: ${compName} from ${mod.moduleId}`);
+                const componentLoader = componentRegistry.getComponent(mod.moduleId, compName);
 
                 if (!componentLoader) {
                     setError(
-                        `Component '${componentName}' not found in module '${mod.moduleId}'`
+                        `Component '${compName}' not found in module '${mod.moduleId}'`
                     );
                     setIsLoadingComponent(false);
                     return;
@@ -81,7 +85,7 @@ export default function ModuleRoutePage() {
                 // Load the component
                 const componentModule = await componentLoader();
                 setComponent(() => componentModule.default);
-                console.log(`✅ Component loaded: ${componentName}`);
+                console.log(`✅ Component loaded: ${compName}`);
             } catch (err) {
                 console.error('Error loading component:', err);
                 setError(err instanceof Error ? err.message : 'Failed to load component');
@@ -91,7 +95,7 @@ export default function ModuleRoutePage() {
         }
 
         loadComponent();
-    }, [matchedRoute, modulesLoading]);
+    }, [moduleId, componentName, modulesLoading, matchedRoute]);
 
     // Still loading modules config
     if (modulesLoading) {

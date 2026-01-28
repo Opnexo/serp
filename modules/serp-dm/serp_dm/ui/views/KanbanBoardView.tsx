@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import {
     Card,
     CardHeader,
@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Settings, GripVertical, FileText } from 'lucide-react';
+import CreateStageDialog from '../components/CreateStageDialog';
 
 interface Stage {
     id: string;
@@ -58,7 +59,7 @@ interface KanbanData {
 
 // Sortable document card component
 function DocumentCard({ document }: { document: Document }) {
-    const navigate = useNavigate();
+    const router = useRouter();
     const {
         attributes,
         listeners,
@@ -79,7 +80,7 @@ function DocumentCard({ document }: { document: Document }) {
             ref={setNodeRef}
             style={style}
             className="group cursor-pointer rounded-lg border bg-card p-3 shadow-sm hover:shadow-md"
-            onClick={() => navigate(`/dm/documents/${document.id}`)}
+            onClick={() => router.push(`/dm/documents/${document.id}`)}
         >
             <div className="flex items-start gap-2">
                 <div
@@ -169,15 +170,27 @@ function KanbanColumn({
 }
 
 export default function KanbanBoardView() {
-    const navigate = useNavigate();
+    const router = useRouter();
     const [kanbanData, setKanbanData] = useState<KanbanData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeDocument, setActiveDocument] = useState<Document | null>(null);
     const [overStageId, setOverStageId] = useState<string | null>(null);
+    const [showCreateStageDialog, setShowCreateStageDialog] = useState(false);
 
     // TODO: Get from project context or route param
     const projectId = new URLSearchParams(window.location.search).get('project');
+
+    // Check for action param to open dialogs
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('action') === 'new-stage') {
+            setShowCreateStageDialog(true);
+            // Clean URL
+            // params.delete('action');
+            // navigate(`?${params.toString()}`, { replace: true });
+        }
+    }, [location.search]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -336,12 +349,21 @@ export default function KanbanBoardView() {
                         <p className="mt-1 text-muted-foreground">
                             Create stages to organize your document workflow
                         </p>
-                        <Button className="mt-4">
+                        <Button className="mt-4" onClick={() => setShowCreateStageDialog(true)}>
                             <Plus className="mr-2 h-4 w-4" />
                             Create Stages
                         </Button>
                     </CardContent>
                 </Card>
+
+                {projectId && (
+                    <CreateStageDialog
+                        open={showCreateStageDialog}
+                        onOpenChange={setShowCreateStageDialog}
+                        projectId={projectId}
+                        onSuccess={fetchKanbanData}
+                    />
+                )}
             </div>
         );
     }
@@ -356,7 +378,11 @@ export default function KanbanBoardView() {
                         <Settings className="mr-2 h-4 w-4" />
                         Manage Stages
                     </Button>
-                    <Button onClick={() => navigate('/dm/documents/new')}>
+                    <Button onClick={() => setShowCreateStageDialog(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Stage
+                    </Button>
+                    <Button onClick={() => router.push('/dm/documents/new')}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Document
                     </Button>
@@ -395,6 +421,15 @@ export default function KanbanBoardView() {
                     )}
                 </DragOverlay>
             </DndContext>
+
+            {projectId && (
+                <CreateStageDialog
+                    open={showCreateStageDialog}
+                    onOpenChange={setShowCreateStageDialog}
+                    projectId={projectId}
+                    onSuccess={fetchKanbanData}
+                />
+            )}
         </div>
     );
 }

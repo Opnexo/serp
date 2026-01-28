@@ -30,51 +30,100 @@ from serp_dm.application.dto import (
     UpdateStageRequest,
 )
 from serp_dm.interfaces.permissions import DMPermissions
+from serp_dm.application.services import (
+    DocumentService,
+    VersioningService,
+    StageService,
+    FolderService,
+    DocumentTypeService,
+    StorageTemplateService,
+)
+from serp_dm.infrastructure.persistence.database import get_db_session
+from serp_dm.infrastructure.persistence.repositories.postgres import (
+    PostgresDocumentRepository,
+    PostgresDocumentVersionRepository,
+    PostgresStageRepository,
+    PostgresFolderRepository,
+    PostgresDocumentTypeRepository,
+    PostgresStorageTemplateRepository,
+    PostgresTemplateFolderRepository,
+    PostgresApprovalRequestRepository,
+    PostgresAuditLogRepository,
+)
+from serp_dm.infrastructure.storage import MinioStorageAdapter
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Main router
 router = APIRouter(tags=["Document Management"])
 
 
 # =============================================================================
-# Dependency Injection (TODO: Replace with proper DI container)
+# Dependency Injection
 # =============================================================================
 
-# These are placeholder functions - in production, inject from container
-async def get_document_service():
+def get_document_service(session: AsyncSession = Depends(get_db_session)) -> DocumentService:
     """Get document service instance."""
-    # TODO: Inject from DI container
-    raise NotImplementedError("Inject DocumentService from DI container")
+    storage = MinioStorageAdapter()  # Uses default MinIO settings
+    return DocumentService(
+        document_repo=PostgresDocumentRepository(session),
+        version_repo=PostgresDocumentVersionRepository(session),
+        stage_repo=PostgresStageRepository(session),
+        folder_repo=PostgresFolderRepository(session),
+        doc_type_repo=PostgresDocumentTypeRepository(session),
+        storage=storage,
+        audit_repo=PostgresAuditLogRepository(session),
+    )
 
 
-async def get_versioning_service():
+def get_versioning_service(session: AsyncSession = Depends(get_db_session)) -> VersioningService:
     """Get versioning service instance."""
-    raise NotImplementedError("Inject VersioningService from DI container")
+    storage = MinioStorageAdapter()  # Uses default MinIO settings
+    return VersioningService(
+        document_repo=PostgresDocumentRepository(session),
+        version_repo=PostgresDocumentVersionRepository(session),
+        doc_type_repo=PostgresDocumentTypeRepository(session),
+        storage=storage,
+        audit_repo=PostgresAuditLogRepository(session),
+    )
 
 
-async def get_stage_service():
+def get_stage_service(session: AsyncSession = Depends(get_db_session)) -> StageService:
     """Get stage service instance."""
-    raise NotImplementedError("Inject StageService from DI container")
+    return StageService(
+        stage_repo=PostgresStageRepository(session),
+        document_repo=PostgresDocumentRepository(session),
+    )
 
 
-async def get_folder_service():
+def get_folder_service(session: AsyncSession = Depends(get_db_session)) -> FolderService:
     """Get folder service instance."""
-    raise NotImplementedError("Inject FolderService from DI container")
+    return FolderService(
+        folder_repo=PostgresFolderRepository(session),
+    )
 
 
-async def get_doc_type_service():
+def get_doc_type_service(session: AsyncSession = Depends(get_db_session)) -> DocumentTypeService:
     """Get document type service instance."""
-    raise NotImplementedError("Inject DocumentTypeService from DI container")
+    return DocumentTypeService(
+        doc_type_repo=PostgresDocumentTypeRepository(session),
+    )
 
 
-async def get_template_service():
+def get_template_service(session: AsyncSession = Depends(get_db_session)) -> StorageTemplateService:
     """Get storage template service instance."""
-    raise NotImplementedError("Inject StorageTemplateService from DI container")
+    return StorageTemplateService(
+        template_repo=PostgresStorageTemplateRepository(session),
+        template_folder_repo=PostgresTemplateFolderRepository(session),
+        folder_repo=PostgresFolderRepository(session),
+    )
 
 
 async def get_current_user_id() -> UUID:
     """Get current authenticated user ID."""
     # TODO: Extract from auth context
-    raise NotImplementedError("Extract user ID from auth context")
+    # For now, return a placeholder UUID
+    import uuid
+    return uuid.UUID("00000000-0000-0000-0000-000000000000")
 
 
 # =============================================================================

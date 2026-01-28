@@ -6,7 +6,8 @@ export * from './Empty';
 export * from './Input';
 export * from './Label';
 export * from './Modal';
-export * from './Select';
+// Shadcn UI Select (Base UI) - the correct one to use
+export * from './select';
 export * from './Spinner';
 export * from './Table';
 export * from './Tabs';

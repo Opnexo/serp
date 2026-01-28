@@ -72,3 +72,10 @@ def get_database_manager(settings: DMSettings | None = None) -> DatabaseManager:
             settings = DMSettings()
         _db_manager = DatabaseManager(settings)
     return _db_manager
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency for getting DB session."""
+    manager = get_database_manager()
+    async for session in manager.get_session():
+        yield session

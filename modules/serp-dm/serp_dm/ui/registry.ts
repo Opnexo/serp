@@ -29,16 +29,16 @@ export const dmModuleRegistry: ModuleRegistry = {
                 groupOrder: 1,
                 buttons: [
                     {
-                        buttonId: 'dm-documents-list',
-                        label: 'All Documents',
+                        buttonId: 'dm-projects-list',
+                        label: 'Projects', // Renamed from "All Documents"
                         icon: 'Files',
                         permission: DM_PERMISSIONS.DOCUMENT_LIST,
                         action: {
                             type: 'navigate',
-                            route: '/dm/documents',
+                            route: '/dm/projects', // Changed from /dm/documents
                         },
                         buttonOrder: 1,
-                        tooltip: 'View all documents',
+                        tooltip: 'View all projects',
                     },
                     {
                         buttonId: 'dm-documents-new',
@@ -52,6 +52,18 @@ export const dmModuleRegistry: ModuleRegistry = {
                         variant: 'primary',
                         buttonOrder: 2,
                         tooltip: 'Register a new document',
+                    },
+                    {
+                        buttonId: 'dm-export',
+                        label: 'Export',
+                        icon: 'Download',
+                        permission: DM_PERMISSIONS.DOCUMENT_LIST,
+                        action: {
+                            type: 'navigate',
+                            route: '/dm/export',
+                        },
+                        buttonOrder: 3,
+                        tooltip: 'Export documents as ZIP',
                     },
                 ],
             },
@@ -71,6 +83,18 @@ export const dmModuleRegistry: ModuleRegistry = {
                         },
                         buttonOrder: 1,
                         tooltip: 'View Kanban board',
+                    },
+                    {
+                        buttonId: 'dm-stage-new',
+                        label: 'New Stage',
+                        icon: 'Plus',
+                        permission: DM_PERMISSIONS.STAGE_LIST,
+                        action: {
+                            type: 'navigate',
+                            route: '/dm/kanban?action=new-stage',
+                        },
+                        buttonOrder: 2,
+                        tooltip: 'Create a new workflow stage',
                     },
                 ],
             },
@@ -109,12 +133,31 @@ export const dmModuleRegistry: ModuleRegistry = {
     },
 
     routes: [
-        // Documents
+        // Projects & Documents
+        {
+            routeId: 'dm-projects',
+            path: '/dm/projects',
+            permission: DM_PERMISSIONS.DOCUMENT_LIST,
+            component: () => import('./views/DMProjectsListView'),
+        },
+        // Kept for direct access via URL or deep links
         {
             routeId: 'dm-documents',
             path: '/dm/documents',
             permission: DM_PERMISSIONS.DOCUMENT_LIST,
             component: () => import('./views/DocumentsListView'),
+        },
+        {
+            routeId: 'dm-project-detail',
+            path: '/dm/projects/:projectId',
+            permission: DM_PERMISSIONS.DOCUMENT_LIST,
+            component: () => import('./views/DMProjectView'), // This view needs to be created
+        },
+        {
+            routeId: 'dm-export',
+            path: '/dm/export',
+            permission: DM_PERMISSIONS.DOCUMENT_LIST,
+            component: () => import('./views/ExportView'),
         },
         {
             routeId: 'dm-documents-new',
