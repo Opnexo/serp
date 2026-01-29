@@ -14,6 +14,10 @@ import DocumentDetailView from './views/DocumentDetailView';
 import KanbanBoardView from './views/KanbanBoardView';
 import TemplatesView from './views/TemplatesView';
 import DocumentTypesView from './views/DocumentTypesView';
+import DMProjectsListView from './views/DMProjectsListView';
+import DMProjectView from './views/DMProjectView';
+import StageTemplatesView from './views/StageTemplatesView';
+import ExportView from './views/ExportView';
 
 // Import widgets
 import { ProjectDocumentsWidget } from './components';
@@ -36,6 +40,10 @@ export const components: Record<string, () => Promise<{ default: ComponentType<a
     KanbanBoardView: () => Promise.resolve({ default: KanbanBoardView }),
     TemplatesView: () => Promise.resolve({ default: TemplatesView }),
     DocumentTypesView: () => Promise.resolve({ default: DocumentTypesView }),
+    DMProjectsListView: () => Promise.resolve({ default: DMProjectsListView }),
+    DMProjectView: () => Promise.resolve({ default: DMProjectView }),
+    StageTemplatesView: () => Promise.resolve({ default: StageTemplatesView }),
+    ExportView: () => Promise.resolve({ default: ExportView }),
 
     // Widgets (for PM integration)
     ProjectDocumentsWidget: () => Promise.resolve({ default: ProjectDocumentsWidget }),

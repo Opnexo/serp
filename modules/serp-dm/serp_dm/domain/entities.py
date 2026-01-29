@@ -22,6 +22,44 @@ from .value_objects import (
 
 
 @dataclass(kw_only=True)
+class Project(AggregateRoot):
+    """
+    DM Project configuration.
+
+    Decouples DM from PM. Stores local configuration like template usage.
+    """
+
+    pm_project_id: UUID  # Reference to PM module
+    name: str  # Cached name or specific DM name
+    status: str = "active"
+    template_id: Optional[UUID] = None  # Storage template used
+    stage_template_id: Optional[UUID] = None  # Workflow template used
+    is_active: bool = True
+
+
+@dataclass(kw_only=True)
+class StageTemplateItem(Entity):
+    """Item within a stage template."""
+
+    template_id: UUID
+    name: str
+    description: str = ""
+    order: int = 0
+    color: str = "#6B7280"
+
+
+@dataclass(kw_only=True)
+class StageTemplate(Entity):
+    """Template for Kanban workflow stages."""
+
+    name: str
+    description: str = ""
+    is_default: bool = False
+    is_active: bool = True
+
+
+
+@dataclass(kw_only=True)
 class DocumentType(Entity):
     """
     Configurable document type classification.

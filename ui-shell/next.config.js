@@ -20,10 +20,14 @@ const nextConfig = {
                 source: '/api/modules/:path*',
                 destination: 'http://localhost:8000/api/modules/:path*',
             },
-            // PM module API
             {
                 source: '/api/pm/:path*',
                 destination: 'http://localhost:8000/api/pm/:path*',
+            },
+            // DM module API
+            {
+                source: '/api/dm/:path*',
+                destination: 'http://localhost:8000/api/dm/:path*',
             },
             // UI config
             {

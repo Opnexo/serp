@@ -17,6 +17,10 @@ MODULE_INFO = ModuleInfo(
     description="Document and file management system with folders and metadata",
     author="SERP Team",
     dependencies=["serp-core>=1.0.0", "serp-resources>=0.1.0"],
+    entry_points={
+        "api": "serp_dm.interfaces.api.routes:load_api_routes",
+        "ui": "serp_dm.ui:load_ui_config",
+    },
 )
 
 __all__ = [

@@ -77,6 +77,8 @@ export interface ModuleRegistry {
     permissions: string[];
     /** HMR configuration for development */
     hmr?: HmrConfig;
+    /** Exposed widgets for other modules */
+    widgets?: Record<string, () => Promise<{ default: ComponentType<any> }>>;
 }
 
 export interface LoadedModule extends ModuleRegistry {

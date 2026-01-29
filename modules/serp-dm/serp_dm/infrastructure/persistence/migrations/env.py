@@ -28,6 +28,13 @@ config.set_main_option("sqlalchemy.url", settings.database_url)
 target_metadata = Base.metadata
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    """Include only objects in the configured schema."""
+    if type_ == "table":
+        return object.schema == settings.database_schema
+    return True
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
     url = config.get_main_option("sqlalchemy.url")
@@ -37,6 +44,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table_schema=settings.database_schema,
+        include_schemas=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -49,6 +58,8 @@ def do_run_migrations(connection):
         connection=connection,
         target_metadata=target_metadata,
         version_table_schema=settings.database_schema,
+        include_schemas=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():

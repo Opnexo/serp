@@ -10,6 +10,7 @@ from .postgres import (
     PostgresDocumentVersionRepository,
     PostgresFolderRepository,
     PostgresStageRepository,
+    PostgresStageTemplateRepository,
     PostgresStorageTemplateRepository,
     PostgresTemplateFolderRepository,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "PostgresStageRepository",
     "PostgresFolderRepository",
     "PostgresStorageTemplateRepository",
+    "PostgresStageTemplateRepository",
     "PostgresTemplateFolderRepository",
     "PostgresDocumentTypeRepository",
     "PostgresApprovalRequestRepository",

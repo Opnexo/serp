@@ -12,11 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from serp_dm.domain.entities import (
     ApprovalRequest,
     AuditLogEntry,
+    Project as DMProject,
     Document,
     DocumentType,
     DocumentVersion,
     Folder,
     Stage,
+    StageTemplate,
+    StageTemplateItem,
     StorageTemplate,
     TemplateFolder,
 )
@@ -27,7 +30,9 @@ from serp_dm.domain.repositories import (
     IDocumentTypeRepository,
     IDocumentVersionRepository,
     IFolderRepository,
+    IProjectRepository,
     IStageRepository,
+    IStageTemplateRepository,
     IStorageTemplateRepository,
     ITemplateFolderRepository,
 )
@@ -46,7 +51,10 @@ from serp_dm.infrastructure.persistence.models import (
     DocumentTypeModel,
     DocumentVersionModel,
     FolderModel,
+    ProjectModel,
     StageModel,
+    StageTemplateItemModel,
+    StageTemplateModel,
     StorageTemplateModel,
     TemplateFolderModel,
 )
@@ -660,8 +668,15 @@ class PostgresTemplateFolderRepository(ITemplateFolderRepository):
         )
         model = result.scalar_one_or_none()
         if model:
-            await self.session.delete(model)
             await self.session.commit()
+
+    async def count_by_template(self, template_id: UUID) -> int:
+        result = await self.session.execute(
+            select(func.count(TemplateFolderModel.id)).where(
+                TemplateFolderModel.template_id == template_id
+            )
+        )
+        return result.scalar() or 0
 
 
 # =============================================================================
@@ -937,3 +952,165 @@ class PostgresAuditLogRepository(IAuditLogRepository):
             query.order_by(desc(AuditLogModel.timestamp)).offset(skip).limit(limit)
         )
         return [self._to_entity(m) for m in result.scalars().all()]
+
+
+# =============================================================================
+# Project Repository (DM Config)
+# =============================================================================
+
+
+class PostgresProjectRepository(IProjectRepository):
+    """PostgreSQL implementation of Project repository (DM Config)."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    def _to_entity(self, model: ProjectModel) -> DMProject:
+        return DMProject(
+            id=model.id,
+            pm_project_id=model.pm_project_id,
+            name=model.name,
+            status=model.status,
+            template_id=model.template_id,
+            stage_template_id=model.stage_template_id,
+            is_active=model.is_active,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+    def _to_model(self, entity: DMProject) -> ProjectModel:
+        return ProjectModel(
+            id=entity.id,
+            pm_project_id=entity.pm_project_id,
+            name=entity.name,
+            status=entity.status,
+            template_id=entity.template_id,
+            stage_template_id=entity.stage_template_id,
+            is_active=entity.is_active,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+        )
+
+    async def get_by_pm_id(self, pm_project_id: UUID) -> Optional[DMProject]:
+        result = await self.session.execute(
+            select(ProjectModel).where(ProjectModel.pm_project_id == pm_project_id)
+        )
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def list_all(self) -> list[DMProject]:
+        result = await self.session.execute(
+            select(ProjectModel).where(ProjectModel.is_active == True)
+        )
+        return [self._to_entity(m) for m in result.scalars().all()]
+
+    async def save(self, project: DMProject) -> DMProject:
+        if project.id == UUID(int=0):
+            project.id = uuid4()
+        model = self._to_model(project)
+        await self.session.merge(model)
+        await self.session.commit()
+        return project
+
+
+# =============================================================================
+# Stage Template Repository
+# =============================================================================
+
+
+class PostgresStageTemplateRepository(IStageTemplateRepository):
+    """PostgreSQL implementation of Stage Template repository."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    def _to_entity(self, model: StageTemplateModel) -> StageTemplate:
+        return StageTemplate(
+            id=model.id,
+            name=model.name,
+            description=model.description,
+            is_default=model.is_default,
+            is_active=model.is_active,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+    def _to_model(self, entity: StageTemplate) -> StageTemplateModel:
+        return StageTemplateModel(
+            id=entity.id,
+            name=entity.name,
+            description=entity.description,
+            is_default=entity.is_default,
+            is_active=entity.is_active,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+        )
+
+    def _item_to_entity(self, model: StageTemplateItemModel) -> StageTemplateItem:
+        return StageTemplateItem(
+            id=model.id,
+            template_id=model.template_id,
+            name=model.name,
+            description=model.description,
+            order=model.order_index,
+            color=model.color,
+            created_at=model.created_at,
+        )
+
+    def _item_to_model(self, entity: StageTemplateItem) -> StageTemplateItemModel:
+        return StageTemplateItemModel(
+            id=entity.id,
+            template_id=entity.template_id,
+            name=entity.name,
+            description=entity.description,
+            order_index=entity.order,
+            color=entity.color,
+            created_at=entity.created_at,
+        )
+
+    async def get_by_id(self, id: UUID) -> Optional[StageTemplate]:
+        result = await self.session.execute(
+            select(StageTemplateModel).where(StageTemplateModel.id == id)
+        )
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def list_all(self) -> list[StageTemplate]:
+        result = await self.session.execute(
+            select(StageTemplateModel)
+            .where(StageTemplateModel.is_active == True)
+            .order_by(StageTemplateModel.name)
+        )
+        return [self._to_entity(m) for m in result.scalars().all()]
+
+    async def save(self, template: StageTemplate) -> StageTemplate:
+        if template.id == UUID(int=0):
+            template.id = uuid4()
+        model = self._to_model(template)
+        await self.session.merge(model)
+        await self.session.commit()
+        return template
+
+    async def list_items(self, template_id: UUID) -> list[StageTemplateItem]:
+        result = await self.session.execute(
+            select(StageTemplateItemModel)
+            .where(StageTemplateItemModel.template_id == template_id)
+            .order_by(StageTemplateItemModel.order_index)
+        )
+        return [self._item_to_entity(m) for m in result.scalars().all()]
+
+    async def save_item(self, item: StageTemplateItem) -> StageTemplateItem:
+        if item.id == UUID(int=0):
+            item.id = uuid4()
+        model = self._item_to_model(item)
+        await self.session.merge(model)
+        await self.session.commit()
+        return item
+
+    async def count_items(self, template_id: UUID) -> int:
+        result = await self.session.execute(
+            select(func.count(StageTemplateItemModel.id)).where(
+                StageTemplateItemModel.template_id == template_id
+            )
+        )
+        return result.scalar() or 0

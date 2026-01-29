@@ -24,6 +24,82 @@ Base = declarative_base()
 
 
 # =============================================================================
+# Projects (DM Configuration)
+# =============================================================================
+
+
+class ProjectModel(Base):
+    """DM-specific project configuration."""
+
+    __tablename__ = "projects"
+    __table_args__ = (
+        Index("idx_projects_pm_id", "pm_project_id", unique=True),
+        {"schema": "dm"},
+    )
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    pm_project_id = Column(PG_UUID(as_uuid=True), nullable=False)
+    name = Column(String(255), nullable=False)
+    status = Column(String(50), default="active")
+    template_id = Column(PG_UUID(as_uuid=True), nullable=True)
+    stage_template_id = Column(PG_UUID(as_uuid=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# =============================================================================
+# Stage Templates
+# =============================================================================
+
+
+class StageTemplateModel(Base):
+    """Template for Kanban workflows."""
+
+    __tablename__ = "stage_templates"
+    __table_args__ = ({"schema": "dm"},)
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, default="")
+    is_default = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    items = relationship(
+        "StageTemplateItemModel",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        order_by="StageTemplateItemModel.order_index",
+    )
+
+
+class StageTemplateItemModel(Base):
+    """Item/Stage within a template."""
+
+    __tablename__ = "stage_template_items"
+    __table_args__ = (
+        Index("idx_stage_template_items_template_id", "template_id"),
+        {"schema": "dm"},
+    )
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    template_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("dm.stage_templates.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name = Column(String(100), nullable=False)
+    description = Column(Text, default="")
+    order_index = Column(Integer, default=0)
+    color = Column(String(7), default="#6B7280")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    template = relationship("StageTemplateModel", back_populates="items")
+
+
+# =============================================================================
 # Document Type Configuration
 # =============================================================================
 

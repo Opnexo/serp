@@ -97,6 +97,25 @@ class CreateDocumentTypeRequest(BaseModel):
     category: str = "general"
 
 
+class ConfigureProjectRequest(BaseModel):
+    """Request to configure a DM project."""
+
+    pm_project_id: Optional[UUID] = None  # Set by route handler from path param
+    template_id: UUID
+    stage_template_id: UUID
+    name: str  # Cache of PM project name
+
+
+class CreateStageTemplateRequest(BaseModel):
+    """Request to create a workflow template."""
+
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = ""
+    is_default: bool = False
+    stages: list[dict[str, Any]] = Field(default_factory=list)  # [{name, color, order}]
+
+
+
 class UpdateDocumentTypeRequest(BaseModel):
     """Request to update a document type."""
 
@@ -225,6 +244,52 @@ class StorageTemplateDTO(BaseModel):
     is_default: bool
     is_active: bool
     folder_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class StageTemplateDTO(BaseModel):
+    """Stage template data transfer object."""
+
+    id: UUID
+    name: str
+    description: str
+    is_default: bool
+    is_active: bool
+    stage_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class StageTemplateItemDTO(BaseModel):
+    """Stage template item data transfer object."""
+
+    id: UUID
+    template_id: UUID
+    name: str
+    description: str
+    order: int
+    color: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class ProjectConfigDTO(BaseModel):
+    """DM Project Configuration DTO."""
+
+    id: UUID
+    pm_project_id: UUID
+    name: str
+    status: str
+    template_id: Optional[UUID]
+    stage_template_id: Optional[UUID]
+    is_active: bool
     created_at: datetime
     updated_at: datetime
 

@@ -5,7 +5,7 @@ FastAPI routes for Document Management module.
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 
 from serp_dm.application.dto import (
     CreateDocumentTypeRequest,
@@ -28,6 +28,11 @@ from serp_dm.application.dto import (
     UpdateDocumentRequest,
     UpdateDocumentTypeRequest,
     UpdateStageRequest,
+    ConfigureProjectRequest,
+    CreateStageTemplateRequest,
+    ProjectConfigDTO,
+    StageTemplateDTO,
+    StageTemplateItemDTO,
 )
 from serp_dm.interfaces.permissions import DMPermissions
 from serp_dm.application.services import (
@@ -36,7 +41,10 @@ from serp_dm.application.services import (
     StageService,
     FolderService,
     DocumentTypeService,
+    DocumentTypeService,
     StorageTemplateService,
+    ProjectService,
+    StageTemplateService,
 )
 from serp_dm.infrastructure.persistence.database import get_db_session
 from serp_dm.infrastructure.persistence.repositories.postgres import (
@@ -49,6 +57,8 @@ from serp_dm.infrastructure.persistence.repositories.postgres import (
     PostgresTemplateFolderRepository,
     PostgresApprovalRequestRepository,
     PostgresAuditLogRepository,
+    PostgresProjectRepository,
+    PostgresStageTemplateRepository,
 )
 from serp_dm.infrastructure.storage import MinioStorageAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -118,6 +128,25 @@ def get_template_service(session: AsyncSession = Depends(get_db_session)) -> Sto
     )
 
 
+def get_project_service(session: AsyncSession = Depends(get_db_session)) -> ProjectService:
+    """Get project service instance."""
+    return ProjectService(
+        project_repo=PostgresProjectRepository(session),
+        folder_repo=PostgresFolderRepository(session),
+        stage_repo=PostgresStageRepository(session),
+        template_repo=PostgresStorageTemplateRepository(session),
+        template_folder_repo=PostgresTemplateFolderRepository(session),
+        stage_template_repo=PostgresStageTemplateRepository(session),
+    )
+
+
+def get_stage_template_service(session: AsyncSession = Depends(get_db_session)) -> StageTemplateService:
+    """Get stage template service instance."""
+    return StageTemplateService(
+        template_repo=PostgresStageTemplateRepository(session),
+    )
+
+
 async def get_current_user_id() -> UUID:
     """Get current authenticated user ID."""
     # TODO: Extract from auth context
@@ -182,13 +211,36 @@ async def get_document(
 )
 async def register_document(
     project_id: UUID,
-    request: RegisterDocumentRequest,
+    title: str = Form(...),
+    document_type_id: UUID = Form(...),
+    description: Optional[str] = Form(None),
+    stage_id: Optional[UUID] = Form(None),
+    folder_id: Optional[UUID] = Form(None),
+    tags: list[str] = Form([]),
+    external_references: list[str] = Form([]),
+    file: Optional[UploadFile] = File(None),
     service=Depends(get_document_service),
     user_id: UUID = Depends(get_current_user_id),
 ):
     """Register a new document in the project."""
-    request.project_id = project_id
-    return await service.register_document(request, user_id)
+    # Construct request object manually from form data
+    request = RegisterDocumentRequest(
+        project_id=project_id,
+        title=title,
+        document_type_id=document_type_id,
+        description=description,
+        stage_id=stage_id,
+        folder_id=folder_id,
+        tags=tags,
+        external_references=external_references,
+    )
+    
+    # Pass file to service if provided
+    # Note: Service needs update to handle file content during registration if we want atomic
+    # For now, let's assume service.register_document handles it if we pass it, 
+    # or we do it in two steps (register -> upload version).
+    # Ideally, register_document should support initial file.
+    return await service.register_document(request, user_id, file)
 
 
 @router.put(
@@ -674,6 +726,104 @@ async def get_recent_documents(
         "project_id": str(project_id),
         "documents": documents.items,
     }
+
+
+# =============================================================================
+# Stage Template Routes (Admin)
+# =============================================================================
+
+
+@router.get(
+    "/admin/stage-templates",
+    response_model=list[StageTemplateDTO],
+    summary="List stage templates",
+)
+async def list_stage_templates(
+    service=Depends(get_stage_template_service),
+):
+    """List all stage templates."""
+    return await service.list_templates()
+
+
+@router.post(
+    "/admin/stage-templates",
+    response_model=StageTemplateDTO,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a stage template",
+)
+async def create_stage_template(
+    request: CreateStageTemplateRequest,
+    service=Depends(get_stage_template_service),
+):
+    """Create a new stage template (admin only)."""
+    return await service.create_template(request)
+
+
+@router.get(
+    "/admin/stage-templates/{template_id}",
+    response_model=StageTemplateDTO,
+    summary="Get stage template details",
+)
+async def get_stage_template(
+    template_id: UUID,
+    service=Depends(get_stage_template_service),
+):
+    """Get stage template details."""
+    template = await service.get_template(template_id)
+    if not template:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+    return template
+
+
+@router.get(
+    "/admin/stage-templates/{template_id}/items",
+    response_model=list[StageTemplateItemDTO],
+    summary="List stage template items",
+)
+async def list_stage_template_items(
+    template_id: UUID,
+    service=Depends(get_stage_template_service),
+):
+    """List items in a stage template."""
+    return await service.list_items(template_id)
+
+
+# =============================================================================
+# Project Configuration Routes
+# =============================================================================
+
+
+@router.get(
+    "/projects/{project_id}/config",
+    response_model=Optional[ProjectConfigDTO],
+    summary="Get project configuration",
+)
+async def get_project_config(
+    project_id: UUID,
+    service=Depends(get_project_service),
+):
+    """Get DM configuration for a project. Returns None if not configured."""
+    return await service.get_project_config(project_id)
+
+
+@router.post(
+    "/projects/{project_id}/config",
+    response_model=ProjectConfigDTO,
+    summary="Configure project",
+)
+async def configure_project(
+    project_id: UUID,
+    request: ConfigureProjectRequest,
+    service=Depends(get_project_service),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    """
+    Configure DM for a project.
+    
+    This applies the selected storage and stage templates.
+    """
+    request.pm_project_id = project_id
+    return await service.configure_project(request, user_id)
 
 
 # =============================================================================

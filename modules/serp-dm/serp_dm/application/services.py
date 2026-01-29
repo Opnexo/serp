@@ -12,9 +12,11 @@ from serp_core.application.service import ApplicationService
 from serp_dm.application.dto import (
     ApprovalDecisionRequest,
     ApprovalRequestDTO,
+    ConfigureProjectRequest,
     CreateDocumentTypeRequest,
     CreateFolderRequest,
     CreateStageRequest,
+    CreateStageTemplateRequest,
     CreateStorageTemplateRequest,
     DocumentDTO,
     DocumentListResponse,
@@ -23,14 +25,17 @@ from serp_dm.application.dto import (
     FolderDTO,
     KanbanBoardResponse,
     MoveDocumentRequest,
+    ProjectConfigDTO,
     RegisterDocumentRequest,
     StageDTO,
+    StageTemplateDTO,
     StorageTemplateDTO,
     SubmitForApprovalRequest,
     UpdateDocumentRequest,
     UpdateDocumentTypeRequest,
     UpdateStageRequest,
     UploadVersionRequest,
+    StageTemplateItemDTO,
 )
 from serp_dm.domain.entities import (
     ApprovalRequest,
@@ -39,7 +44,10 @@ from serp_dm.domain.entities import (
     DocumentType,
     DocumentVersion,
     Folder,
+    Project,
     Stage,
+    StageTemplate,
+    StageTemplateItem,
     StorageTemplate,
     TemplateFolder,
 )
@@ -51,7 +59,9 @@ from serp_dm.domain.repositories import (
     IDocumentTypeRepository,
     IDocumentVersionRepository,
     IFolderRepository,
+    IProjectRepository,
     IStageRepository,
+    IStageTemplateRepository,
     IStorageTemplateRepository,
     ITemplateFolderRepository,
 )
@@ -91,6 +101,7 @@ class DocumentService(ApplicationService):
         self,
         request: RegisterDocumentRequest,
         user_id: UUID,
+        file: Optional[Any] = None,  # UploadFile from FastAPI
     ) -> DocumentDTO:
         """Register a new document in the system."""
         # Get default stage if not provided
@@ -122,6 +133,79 @@ class DocumentService(ApplicationService):
             "title": saved.title,
             "project_id": str(saved.project_id),
         })
+
+        # Handle file upload if provided
+        if file:
+            # We need to use the version service logic but adapted here or call it from here?
+            # Ideally inject VersioningService but avoiding circular dependency might be tricky.
+            # Let's see if we can instantiate it or extract the logic.
+            # Actually, DocumentService constructor doesn't take versioning service.
+            # We can rely on the router to call upload_version separate, OR we duplicate logic/extract specific logic.
+            # Given Dependency Injection in routes, we can't easily access another service unless injected.
+            # BUT, we have version_repo and storage here. We can implement upload directly.
+            
+            content = await file.read()
+            filename = file.filename or "unknown"
+            mime_type = file.content_type or "application/octet-stream"
+            
+            # --- Logic duplicated from VersioningService.upload_version (simplified) ---
+            from serp_dm.domain.value_objects import Version, StorageKey, FileNamingPattern
+            from datetime import date
+            import hashlib
+            
+            new_version = Version.initial(saved.version_scheme)
+            
+            doc_type = await self.doc_type_repo.get_by_id(saved.document_type_id)
+            context = {
+                "document_name": saved.title.replace(" ", "_"),
+                "version": str(new_version),
+                "date": date.today().isoformat(),
+                "doc_type": doc_type.code if doc_type else "DOC",
+                "ext": filename.split(".")[-1] if "." in filename else "bin",
+            }
+            # Use default pattern if not configurable here easily
+            pattern = FileNamingPattern.default()
+            generated_filename = pattern.format(context)
+            
+            checksum = hashlib.sha256(content).hexdigest()
+            
+            storage_key = StorageKey.create(
+                project_id=str(saved.project_id),
+                document_id=str(saved.id),
+                version=str(new_version),
+                filename=generated_filename,
+            )
+            
+            await self.storage.upload(
+                key=storage_key.key,
+                content=content,
+                content_type=mime_type,
+                metadata={"document_id": str(saved.id), "version": str(new_version)},
+            )
+            
+            version_record = DocumentVersion(
+                id=UUID(int=0),
+                document_id=saved.id,
+                version=new_version,
+                storage_key=storage_key,
+                original_filename=filename,
+                generated_filename=generated_filename,
+                mime_type=mime_type,
+                size_bytes=len(content),
+                checksum=checksum,
+                change_note="Initial upload",
+                uploaded_by=user_id,
+            )
+            
+            await self.version_repo.save(version_record)
+            
+            saved.current_version = str(new_version)
+            await self.document_repo.save(saved)
+            
+            await self._log_action("version.uploaded", "document", saved.id, user_id, {
+                "version": str(new_version),
+                "filename": filename
+            })
 
         return await self._to_dto(saved)
 
@@ -798,32 +882,200 @@ class StorageTemplateService(ApplicationService):
                 created_by=user_id,
             )
             saved = await self.folder_repo.save(folder)
-            created_folders.append(FolderDTO(
-                id=saved.id,
-                project_id=saved.project_id,
-                name=saved.name,
-                path=saved.path,
-                parent_id=saved.parent_id,
-                description=saved.description,
-                document_count=0,
-                is_archived=saved.is_archived,
-                created_at=saved.created_at,
-                updated_at=saved.updated_at,
-            ))
+            created_folders.append(self._to_dto(saved))
 
         return created_folders
 
     async def _to_dto(self, template: StorageTemplate) -> StorageTemplateDTO:
         """Convert entity to DTO."""
-        folders = await self.template_folder_repo.list_by_template(template.id)
-
+        folder_count = await self.template_folder_repo.count_by_template(template.id)
         return StorageTemplateDTO(
             id=template.id,
             name=template.name,
             description=template.description,
             is_default=template.is_default,
             is_active=template.is_active,
-            folder_count=len(folders),
+            folder_count=folder_count,
             created_at=template.created_at,
             updated_at=template.updated_at,
+        )
+
+
+class StageTemplateService(ApplicationService):
+    """Application service for stage template management."""
+
+    def __init__(self, template_repo: IStageTemplateRepository):
+        self.template_repo = template_repo
+
+    async def create_template(
+        self, request: CreateStageTemplateRequest
+    ) -> StageTemplateDTO:
+        """Create a new stage template."""
+        template = StageTemplate(
+            id=UUID(int=0),
+            name=request.name,
+            description=request.description,
+            is_default=request.is_default,
+        )
+        saved = await self.template_repo.save(template)
+
+        for idx, item in enumerate(request.stages):
+            stage_item = StageTemplateItem(
+                id=UUID(int=0),
+                template_id=saved.id,
+                name=item.get("name", "Stage"),
+                description=item.get("description", ""),
+                order=idx,
+                color=item.get("color", "#6B7280"),
+            )
+            await self.template_repo.save_item(stage_item)
+
+        return await self._to_dto(saved)
+
+    async def get_template(self, template_id: UUID) -> Optional[StageTemplateDTO]:
+        """Get stage template details."""
+        template = await self.template_repo.get_by_id(template_id)
+        return await self._to_dto(template) if template else None
+
+    async def list_items(self, template_id: UUID) -> list[StageTemplateItemDTO]:
+        """List items in a stage template."""
+        items = await self.template_repo.list_items(template_id)
+        return [
+            StageTemplateItemDTO(
+                id=i.id,
+                template_id=i.template_id,
+                name=i.name,
+                description=i.description,
+                order=i.order,
+                color=i.color,
+                created_at=i.created_at,
+            )
+            for i in items
+        ]
+
+    async def list_templates(self) -> list[StageTemplateDTO]:
+        """List all stage templates."""
+        templates = await self.template_repo.list_all()
+        return [await self._to_dto(t) for t in templates]
+
+    async def _to_dto(self, template: StageTemplate) -> StageTemplateDTO:
+        stage_count = await self.template_repo.count_items(template.id)
+        return StageTemplateDTO(
+            id=template.id,
+            name=template.name,
+            description=template.description,
+            is_default=template.is_default,
+            is_active=template.is_active,
+            stage_count=stage_count,
+            created_at=template.created_at,
+            updated_at=template.updated_at,
+        )
+
+
+class ProjectService(ApplicationService):
+    """Application service for DM project configuration."""
+
+    def __init__(
+        self,
+        project_repo: IProjectRepository,
+        folder_repo: IFolderRepository,
+        stage_repo: IStageRepository,
+        template_repo: IStorageTemplateRepository,
+        template_folder_repo: ITemplateFolderRepository,
+        stage_template_repo: IStageTemplateRepository,
+    ):
+        self.project_repo = project_repo
+        self.folder_repo = folder_repo
+        self.stage_repo = stage_repo
+        self.template_repo = template_repo
+        self.template_folder_repo = template_folder_repo
+        self.stage_template_repo = stage_template_repo
+
+    async def get_project_config(self, pm_project_id: UUID) -> Optional[ProjectConfigDTO]:
+        """Get project configuration by PM project ID."""
+        project = await self.project_repo.get_by_pm_id(pm_project_id)
+        if not project:
+            return None
+        return self._to_dto(project)
+
+    async def configure_project(
+        self, request: ConfigureProjectRequest, user_id: UUID
+    ) -> ProjectConfigDTO:
+        """Initialize a project with DM structures."""
+        # Check if already exists
+        existing = await self.project_repo.get_by_pm_id(request.pm_project_id)
+        if existing:
+            # Just return existing or update? Let's error if re-init attempted
+            # For idempotency, we could just return existing.
+            return self._to_dto(existing)
+
+        # Create Project
+        project = Project(
+            id=request.pm_project_id,  # Use PM ID match for simplicity? Or new UUID? Models says default=uuid4. Let's use new UUID but link PM ID.
+            pm_project_id=request.pm_project_id,
+            name=request.name,
+            template_id=request.template_id,
+            stage_template_id=request.stage_template_id,
+        )
+        saved = await self.project_repo.save(project)
+
+        # Apply Storage Template (Folders)
+        await self._apply_storage_template(saved.id, request.template_id, user_id)
+
+        # Apply Workflow Template (Stages)
+        stage_template = await self.stage_template_repo.get_by_id(
+            request.stage_template_id
+        )
+        if stage_template:
+            items = await self.stage_template_repo.list_items(stage_template.id)
+            for item in items:
+                stage = Stage(
+                    id=UUID(int=0),
+                    project_id=saved.id,
+                    name=item.name,
+                    description=item.description,
+                    order=item.order,
+                    color=item.color,
+                )
+                await self.stage_repo.save(stage)
+
+        return self._to_dto(saved)
+
+    async def _apply_storage_template(
+        self, project_id: UUID, template_id: UUID, user_id: UUID
+    ) -> None:
+        """Apply storage template to create folder structure."""
+        template = await self.template_repo.get_by_id(template_id)
+        if not template:
+            return
+
+        template_folders = await self.template_folder_repo.list_by_template(template_id)
+
+        # Create folders from template
+        for template_folder in sorted(template_folders, key=lambda f: f.path):
+            folder = Folder(
+                id=UUID(int=0),
+                project_id=project_id,
+                name=template_folder.name,
+                path=template_folder.path,
+                description=template_folder.description,
+                parent_id=None,  # TODO: Handle parent relationships
+            )
+            await self.folder_repo.save(folder)
+
+    async def list_projects(self) -> list[ProjectConfigDTO]:
+        projects = await self.project_repo.list_all()
+        return [self._to_dto(p) for p in projects]
+
+    def _to_dto(self, project: Project) -> ProjectConfigDTO:
+        return ProjectConfigDTO(
+            id=project.id,
+            pm_project_id=project.pm_project_id,
+            name=project.name,
+            status=project.status,
+            template_id=project.template_id,
+            stage_template_id=project.stage_template_id,
+            is_active=project.is_active,
+            created_at=datetime.utcnow(),  # TODO: add to entity
+            updated_at=datetime.utcnow(),
         )

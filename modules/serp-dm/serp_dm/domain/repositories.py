@@ -215,6 +215,59 @@ class IStorageTemplateRepository(ABC):
         ...
 
 
+class IStageTemplateRepository(ABC):
+    """Repository interface for Stage Template entity."""
+
+    @abstractmethod
+    async def get_by_id(self, id: UUID) -> Optional[StageTemplate]:
+        """Get template by ID."""
+        ...
+
+    @abstractmethod
+    async def list_all(self) -> list[StageTemplate]:
+        """List all templates."""
+        ...
+
+    @abstractmethod
+    async def save(self, template: StageTemplate) -> StageTemplate:
+        """Save a template."""
+        ...
+
+    @abstractmethod
+    async def list_items(self, template_id: UUID) -> list[StageTemplateItem]:
+        """List items in a template."""
+        ...
+
+    @abstractmethod
+    async def save_item(self, item: StageTemplateItem) -> StageTemplateItem:
+        """Save a template item."""
+        ...
+
+    @abstractmethod
+    async def count_items(self, template_id: UUID) -> int:
+        """Count items in a template."""
+        ...
+
+
+class IProjectRepository(ABC):
+    """Repository interface for DM Project configuration."""
+
+    @abstractmethod
+    async def get_by_pm_id(self, pm_project_id: UUID) -> Optional[Project]:
+        """Get DM project config by PM Project ID."""
+        ...
+
+    @abstractmethod
+    async def list_all(self) -> list[Project]:
+        """List all DM projects."""
+        ...
+
+    @abstractmethod
+    async def save(self, project: Project) -> Project:
+        """Save DM project config."""
+        ...
+
+
 class ITemplateFolderRepository(ABC):
     """Repository interface for TemplateFolder entity."""
 
@@ -236,6 +289,11 @@ class ITemplateFolderRepository(ABC):
     @abstractmethod
     async def delete(self, id: UUID) -> None:
         """Delete a template folder."""
+        ...
+
+    @abstractmethod
+    async def count_by_template(self, template_id: UUID) -> int:
+        """Count folders in a template."""
         ...
 
 

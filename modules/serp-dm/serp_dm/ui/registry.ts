@@ -116,6 +116,18 @@ export const dmModuleRegistry: ModuleRegistry = {
                         tooltip: 'Manage storage templates',
                     },
                     {
+                        buttonId: 'dm-stage-templates',
+                        label: 'Workflows',
+                        icon: 'GitPullRequest',
+                        permission: DM_PERMISSIONS.TEMPLATE_LIST,
+                        action: {
+                            type: 'navigate',
+                            route: '/dm/admin/stage-templates',
+                        },
+                        buttonOrder: 2,
+                        tooltip: 'Manage workflow templates',
+                    },
+                    {
                         buttonId: 'dm-doctypes',
                         label: 'Doc Types',
                         icon: 'Tag',
@@ -186,6 +198,12 @@ export const dmModuleRegistry: ModuleRegistry = {
             path: '/dm/admin/templates',
             permission: DM_PERMISSIONS.TEMPLATE_LIST,
             component: () => import('./views/TemplatesView'),
+        },
+        {
+            routeId: 'dm-stage-templates',
+            path: '/dm/admin/stage-templates',
+            permission: DM_PERMISSIONS.TEMPLATE_LIST,
+            component: () => import('./views/StageTemplatesView'),
         },
         {
             routeId: 'dm-doctypes',

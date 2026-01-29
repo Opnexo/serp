@@ -50,8 +50,10 @@ export default function DocumentFormView() {
     const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
     const [stages, setStages] = useState<Stage[]>([]);
     const [folders, setFolders] = useState<Folder[]>([]);
+    const [projects, setProjects] = useState<{ id: string, name: string }[]>([]);
 
     // Form state
+    const [selectedProjectId, setSelectedProjectId] = useState('');
     const [title, setTitle] = useState('');
     const [documentTypeId, setDocumentTypeId] = useState('');
     const [stageId, setStageId] = useState('');
@@ -64,48 +66,87 @@ export default function DocumentFormView() {
     const projectIdParam = searchParams?.get('project') || null;
 
     useEffect(() => {
-        const loadReferenceData = async () => {
+        if (projectIdParam) {
+            setSelectedProjectId(projectIdParam);
+        } else {
+            // Fetch all projects if none pre-selected
+            const fetchProjects = async () => {
+                try {
+                    const res = await fetch('/api/pm/projects');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setProjects(data.items || []);
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch projects", e);
+                }
+            };
+            fetchProjects();
+        }
+    }, [projectIdParam]);
+
+    useEffect(() => {
+        // Fetch document types globally (independent of project)
+        const loadDocumentTypes = async () => {
+            if (documentTypes.length === 0) {
+                try {
+                    const typesRes = await fetch('/api/dm/admin/document-types');
+                    if (typesRes.ok) {
+                        const types = await typesRes.json();
+                        setDocumentTypes(types);
+                    }
+                } catch (err) {
+                    console.error('Failed to load document types:', err);
+                }
+            }
+        };
+        loadDocumentTypes();
+    }, []);
+
+    useEffect(() => {
+        const loadProjectData = async () => {
+            if (!selectedProjectId) {
+                setStages([]);
+                setFolders([]);
+                return;
+            }
+
             setIsLoading(true);
             try {
-                // Fetch document types
-                const typesRes = await fetch('/api/dm/admin/document-types');
-                if (typesRes.ok) {
-                    const types = await typesRes.json();
-                    setDocumentTypes(types);
+                // Fetch stages and folders for selected project
+                const [stagesRes, foldersRes] = await Promise.all([
+                    fetch(`/api/dm/projects/${selectedProjectId}/stages`),
+                    fetch(`/api/dm/projects/${selectedProjectId}/folders`),
+                ]);
+
+                if (stagesRes.ok) {
+                    const stagesData = await stagesRes.json();
+                    setStages(stagesData.items || []);
                 }
 
-                // Fetch stages and folders if project is selected
-                if (projectIdParam) {
-                    const [stagesRes, foldersRes] = await Promise.all([
-                        fetch(`/api/dm/projects/${projectIdParam}/stages`),
-                        fetch(`/api/dm/projects/${projectIdParam}/folders`),
-                    ]);
-
-                    if (stagesRes.ok) {
-                        const stagesData = await stagesRes.json();
-                        setStages(stagesData.items || []);
-                    }
-
-                    if (foldersRes.ok) {
-                        const foldersData = await foldersRes.json();
-                        setFolders(foldersData.items || []);
-                    }
+                if (foldersRes.ok) {
+                    const foldersData = await foldersRes.json();
+                    setFolders(foldersData.items || []);
                 }
             } catch (err) {
-                console.error('Failed to load reference data:', err);
+                console.error('Failed to load project reference data:', err);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        loadReferenceData();
-    }, []); // Empty dependency array - only run once on mount
+        loadProjectData();
+    }, [selectedProjectId]);
+
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    // ... (existing code)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!projectIdParam) {
-            setError('Please select a project first');
+        if (!selectedProjectId) {
+            setError('Please select a project');
             return;
         }
 
@@ -118,25 +159,32 @@ export default function DocumentFormView() {
         setError(null);
 
         try {
-            const response = await fetch(`/api/dm/projects/${projectIdParam}/documents`, {
+            const formData = new FormData();
+            formData.append('project_id', selectedProjectId);
+            formData.append('title', title.trim());
+            formData.append('document_type_id', documentTypeId);
+            if (stageId) formData.append('stage_id', stageId);
+            if (folderId) formData.append('folder_id', folderId);
+            formData.append('description', description.trim());
+
+            // Handle tags as list
+            const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+            tagList.forEach(tag => formData.append('tags', tag));
+
+            // Handle external refs as list
+            const refList = externalRefs.split('\n').map(r => r.trim()).filter(Boolean);
+            refList.forEach(ref => formData.append('external_references', ref));
+
+            if (selectedFile) {
+                formData.append('file', selectedFile);
+            }
+
+            // Note: Adjust endpoint if backend requires separate upload call
+            // Assuming the create endpoint handles multipart/form-data
+            const response = await fetch(`/api/dm/projects/${selectedProjectId}/documents`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_id: projectIdParam,
-                    title: title.trim(),
-                    document_type_id: documentTypeId,
-                    stage_id: stageId || undefined,
-                    folder_id: folderId || undefined,
-                    description: description.trim(),
-                    tags: tags
-                        .split(',')
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                    external_references: externalRefs
-                        .split('\n')
-                        .map((r) => r.trim())
-                        .filter(Boolean),
-                }),
+                // headers: { 'Content-Type': 'multipart/form-data' }, // Fetch sets this automatically with boundary
+                body: formData,
             });
 
             if (!response.ok) {
@@ -153,7 +201,7 @@ export default function DocumentFormView() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading && !documentTypes.length) { // Only show full spinner on initial load
         return (
             <div className="flex h-64 items-center justify-center">
                 <Spinner size="lg" />
@@ -183,6 +231,30 @@ export default function DocumentFormView() {
                         <CardTitle>Document Information</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {/* Project Selection (if not pre-selected) */}
+                        {!projectIdParam && (
+                            <div className="space-y-2">
+                                <Label htmlFor="project">Project *</Label>
+                                <Select
+                                    value={selectedProjectId}
+                                    onValueChange={(val) => setSelectedProjectId(val || '')}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select project">
+                                            {projects.find(p => p.id === selectedProjectId)?.name || "Select project"}
+                                        </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {projects.map((p) => (
+                                            <SelectItem key={p.id} value={p.id}>
+                                                {p.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         {/* Title */}
                         <div className="space-y-2">
                             <Label htmlFor="title">Title *</Label>
@@ -257,6 +329,22 @@ export default function DocumentFormView() {
                                 </Select>
                             </div>
                         )}
+
+                        {/* File Upload */}
+                        <div className="space-y-2">
+                            <Label htmlFor="file">Document File</Label>
+                            <div className="flex items-center gap-4">
+                                <Input
+                                    id="file"
+                                    type="file"
+                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    className="cursor-pointer"
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Upload the document file (PDF, DOCX, etc.)
+                            </p>
+                        </div>
 
                         {/* Description */}
                         <div className="space-y-2">
